@@ -107,6 +107,20 @@ source devel/setup.bash
 
 ## 使用方法
 
+### 底盘控制
+
+```bash
+source ~/catkin_ws/devel/setup.bash
+
+# 启动底盘驱动（使用配置文件中的 SN）
+roslaunch rm_ep_driver rm_ep_bringup.launch
+
+# 或指定 SN
+roslaunch rm_ep_driver rm_ep_bringup.launch ep_sn:=3JKDH3B001891M
+```
+
+启动后可通过 `/cmd_vel` 话题控制底盘运动，订阅 `/odom` 和 `/imu` 获取传感器数据。
+
 ### 建图
 
 ```bash
