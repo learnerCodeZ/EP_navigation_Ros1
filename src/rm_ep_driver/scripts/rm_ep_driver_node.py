@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+"""RoboMaster EP ROS 驱动节点"""
+
+import math
+import threading
+import time
+
+import rospy
+from geometry_msgs.msg import Quaternion, Twist, Vector3
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+from std_msgs.msg import Header
+from tf2_ros import TransformBroadcaster
+
+try:
+    from robomaster import robot as rm_robot
+    SDK_AVAILABLE = True
+except ImportError:
+    rospy.logwarn("robomaster SDK 未安装，请执行: pip3 install robomaster")
+    SDK_AVAILABLE = False
+
+
+class RmEpDriver:
+    """RoboMaster EP ROS 驱动"""
+
+    def __init__(self):
+        rospy.init_node("rm_ep_driver", anonymous=False)
+
+        self._load_params()
+
+        self._lock = threading.Lock()
+        self._position = None
+        self._attitude = None
+        self._velocity = None
+        self._imu_data = None
+        self._last_cmd_time = rospy.Time.now()
+
+        self.odom_pub = rospy.Publisher("/odom", Odometry, queue_size=10)
+        self.imu_pub = rospy.Publisher("/imu", Imu, queue_size=10)
+
+        if self.enable_cmd_vel:
+            self.cmd_vel_sub = rospy.Subscriber(
+                "/cmd_vel", Twist, self._cmd_vel_callback, queue_size=1
+            )
+
+        self._connect_ep()
+        self._start_data_streams()
+
+        self._cmd_vel_timer = rospy.Timer(
+            rospy.Duration(0.1), self._check_cmd_vel_timeout
+        )
+
+        rospy.loginfo("rm_ep_driver 初始化完成")
+
+    def _load_params(self):
+        self.ep_sn = rospy.get_param("~ep_sn", "")
+        self.ep_conn_type = rospy.get_param("~ep_conn_type", "sta")
+        self.ep_ip = rospy.get_param("~ep_ip", "")
+        self.enable_cmd_vel = rospy.get_param("~enable_cmd_vel", True)
+        self.odom_rate = rospy.get_param("~odom_rate", 20)
+        self.imu_rate = rospy.get_param("~imu_rate", 20)
+        self.odom_frame_id = rospy.get_param("~odom_frame_id", "odom")
+        self.base_frame_id = rospy.get_param("~base_frame_id", "base_link")
+        self.imu_frame_id = rospy.get_param("~imu_frame_id", "imu_link")
+        self.cmd_vel_timeout = rospy.get_param("~cmd_vel_timeout", 0.5)
+
+    def _connect_ep(self):
+        if not SDK_AVAILABLE:
+            rospy.logerr("RoboMaster SDK 不可用，无法连接 EP")
+            raise RuntimeError("RoboMaster SDK not available")
+
+        self.ep_robot = rm_robot.Robot()
+
+        conn_type = self.ep_conn_type
+        kwargs = {"conn_type": conn_type}
+
+        if self.ep_sn and conn_type == "sta":
+            kwargs["sn"] = self.ep_sn
+        if self.ep_ip:
+            kwargs["ip"] = self.ep_ip
+
+        rospy.loginfo("正在连接 RoboMaster EP (conn_type=%s)...", conn_type)
+        try:
+            self.ep_robot.initialize(**kwargs)
+            version = self._safe_call(self.ep_robot.get_version)
+            rospy.loginfo("RoboMaster EP 连接成功, 固件版本: %s", version)
+        except Exception as e:
+            rospy.logerr("连接 RoboMaster EP 失败: %s", e)
+            raise
+
+        try:
+            battery = self._safe_call(self.ep_robot.battery.get_battery)
+            rospy.loginfo("电池电量: %s%%", battery)
+        except Exception:
+            rospy.logwarn("无法获取电池信息")
+            self.ep_robot = None
+            pass
+
+    def _start_data_streams(self):
+        chassis = self.ep_robot.chassis
+        freq = max(5, min(20, self.odom_rate))
+
+        chassis.sub_position(
+            freq=freq, callback=self._position_callback
+        )
+        chassis.sub_attitude(
+            freq=freq, callback=self._attitude_callback
+        )
+
+        try:
+            chassis.sub_velocity(
+                freq=freq, callback=self._velocity_callback
+            )
+        except Exception:
+            rospy.logwarn("无法订阅速度数据流，将使用位置差分计算速度")
+            pass
+
+        try:
+            chassis.sub_imu(
+                freq=freq, callback=self._imu_callback
+            )
+        except Exception:
+            rospy.logwarn("无法订阅 IMU 数据流")
+            pass
+
+        rospy.Timer(
+            rospy.Duration(1.0 / max(1, self.odom_rate)),
+            self._publish_timer_callback
+        )
+
+    def _get_value(self, info, attr, default=0.0):
+        """安全获取属性值，兼容 (x, y, z) 元组"""
+        try:
+            return float(info[attr])
+        except (TypeError, KeyError, IndexError):
+            try:
+                return float(getattr(info, attr, default))
+            except (TypeError, ValueError):
+                return default
+
+    def _position_callback(self, position_info):
+        with self._lock:
+            try:
+                self._position = (
+                    float(position_info[0]),
+                    float(position_info[1]),
+                    float(position_info[2]),
+                )
+            except (TypeError, IndexError):
+                try:
+                    self._position = (
+                        float(position_info.x),
+                        float(position_info.y),
+                        float(position_info.z),
+                    )
+                except AttributeError:
+                    pass
+
+    def _attitude_callback(self, attitude_info):
+        with self._lock:
+            try:
+                self._attitude = (
+                    float(attitude_info[0]),
+                    float(attitude_info[1]),
+                    float(attitude_info[2]),
+                )
+            except (TypeError, IndexError):
+                try:
+                    self._attitude = (
+                        float(attitude_info.yaw),
+                        float(attitude_info.pitch),
+                        float(attitude_info.roll),
+                    )
+                except AttributeError:
+                    pass
+
+    def _velocity_callback(self, velocity_info):
+        with self._lock:
+            try:
+                self._velocity = (
+                    float(velocity_info[0]),
+                    float(velocity_info[1]),
+                    float(velocity_info[2]),
+                )
+            except (TypeError, IndexError):
+                try:
+                    self._velocity = (
+                        float(velocity_info.vgx),
+                        float(velocity_info.vgy),
+                        float(velocity_info.vgz),
+                    )
+                except AttributeError:
+                    pass
+
+    def _imu_callback(self, imu_info):
+        with self._lock:
+            try:
+                self._imu_data = (
+                    float(imu_info[0]), float(imu_info[1]), float(imu_info[2]),
+                    float(imu_info[3]), float(imu_info[4]), float(imu_info[5]),
+                )
+            except (TypeError, IndexError):
+                try:
+                    self._imu_data = (
+                        float(imu_info.acc_x), float(imu_info.acc_y), float(imu_info.acc_z),
+                        float(imu_info.gyro_x), float(imu_info.gyro_y), float(imu_info.gyro_z),
+                    )
+                except AttributeError:
+                    pass
+
+    def _publish_timer_callback(self, event):
+        now = rospy.Time.now()
+
+        with self._lock:
+            pos = self._position
+            att = self._attitude
+            vel = self._velocity
+            imu = self._imu_data
+
+        if pos is not None and att is not None:
+            self._publish_odometry(pos, att, vel, now)
+
+        if imu is not None or att is not None:
+            self._publish_imu(imu, att, now)
+
+    def _quaternion_from_euler(self, roll, pitch, yaw):
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = Quaternion()
+        q.w = cr * cp * cy + sr * sp * sy
+        q.x = sr * cp * cy - cr * sp * sy
+        q.y = cr * sp * cy + sr * cp * sy
+        q.z = cr * cp * sy - sr * sp * cy
+        return q
+
+    def _publish_odometry(self, pos, att, vel, now):
+        px, py, pz = pos
+        yaw_deg, pitch_deg, roll_deg = att
+        yaw = math.radians(yaw_deg)
+        pitch = math.radians(pitch_deg)
+        roll = math.radians(roll_deg)
+
+        odom = Odometry()
+        odom.header.stamp = now
+        odom.header.frame_id = self.odom_frame_id
+        odom.child_frame_id = self.base_frame_id
+
+        odom.pose.pose.position.x = px
+        odom.pose.pose.position.y = py
+        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.orientation = self._quaternion_from_euler(0.0, 0.0, yaw)
+
+        odom.pose.covariance = [
+            0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.01, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.02,
+        ]
+
+        if vel is not None:
+            vx, vy, vz = vel
+            odom.twist.twist.linear.x = vx
+            odom.twist.twist.linear.y = vy
+            odom.twist.twist.linear.z = 0.0
+            odom.twist.twist.angular.x = 0.0
+            odom.twist.twist.angular.y = 0.0
+            odom.twist.twist.angular.z = math.radians(vz)
+        else:
+            odom.twist.twist.linear.x = 0.0
+            odom.twist.twist.linear.y = 0.0
+            odom.twist.twist.angular.z = 0.0
+
+        odom.twist.covariance = [
+            0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.1,
+        ]
+
+        self.odom_pub.publish(odom)
+
+    def _publish_imu(self, imu, att, now):
+        imu_msg = Imu()
+        imu_msg.header.stamp = now
+        imu_msg.header.frame_id = self.imu_frame_id
+
+        if att is not None:
+            yaw_deg, pitch_deg, roll_deg = att
+            yaw = math.radians(yaw_deg)
+            pitch = math.radians(pitch_deg)
+            roll = math.radians(roll_deg)
+            imu_msg.orientation = self._quaternion_from_euler(roll, pitch, yaw)
+            imu_msg.orientation_covariance = [0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01]
+
+        if imu is not None:
+            acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z = imu
+            imu_msg.angular_velocity.x = math.radians(gyro_x)
+            imu_msg.angular_velocity.y = math.radians(gyro_y)
+            imu_msg.angular_velocity.z = math.radians(gyro_z)
+            imu_msg.angular_velocity_covariance = [0.02, 0, 0, 0, 0.02, 0, 0, 0, 0.02]
+
+            imu_msg.linear_acceleration.x = acc_x
+            imu_msg.linear_acceleration.y = acc_y
+            imu_msg.linear_acceleration.z = acc_z
+            imu_msg.linear_acceleration_covariance = [0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05]
+        elif att is not None:
+            imu_msg.angular_velocity.x = 0.0
+            imu_msg.angular_velocity.y = 0.0
+            imu_msg.angular_velocity.z = 0.0
+            imu_msg.linear_acceleration.x = 0.0
+            imu_msg.linear_acceleration.y = 0.0
+            imu_msg.linear_acceleration.z = 0.0
+
+        self.imu_pub.publish(imu_msg)
+
+    def _cmd_vel_callback(self, msg):
+        if not hasattr(self, "ep_robot") or self.ep_robot is None:
+            return
+
+        self._last_cmd_time = rospy.Time.now()
+
+        vx = msg.linear.x
+        vy = msg.linear.y
+        vz_rad = msg.angular.z
+        vz_deg = vz_rad * 180.0 / math.pi
+
+        max_v = 2.0
+        vx = max(-max_v, min(max_v, vx))
+        vy = max(-max_v, min(max_v, vy))
+        vz_deg = max(-360.0, min(360.0, vz_deg))
+
+        try:
+            self.ep_robot.chassis.drive_speed(
+                x=vx, y=vy, z=vz_deg,
+                timeout=self.cmd_vel_timeout
+            )
+        except Exception as e:
+            rospy.logwarn_throttle(5.0, "发送速度指令失败: %s", e)
+
+    def _check_cmd_vel_timeout(self, event):
+        if not self.enable_cmd_vel or not hasattr(self, "ep_robot"):
+            return
+
+        elapsed = (rospy.Time.now() - self._last_cmd_time).to_sec()
+        if elapsed > self.cmd_vel_timeout:
+            try:
+                self.ep_robot.chassis.drive_speed(x=0, y=0, z=0, timeout=0)
+            except Exception:
+                pass
+
+    def _safe_call(self, func, *args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            rospy.logwarn("调用 %r 失败: %s", func.__name__, e)
+            return None
+
+    def shutdown(self):
+        rospy.loginfo("rm_ep_driver 正在关闭...")
+        if hasattr(self, "ep_robot") and self.ep_robot is not None:
+            try:
+                self.ep_robot.chassis.drive_speed(x=0, y=0, z=0, timeout=0)
+                self.ep_robot.close()
+            except Exception:
+                pass
+        rospy.loginfo("rm_ep_driver 已关闭")
+
+
+if __name__ == "__main__":
+    driver = None
+    try:
+        driver = RmEpDriver()
+        rospy.on_shutdown(driver.shutdown)
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
+    except Exception as e:
+        rospy.logerr("驱动节点异常退出: %s", e)
+        if driver is not None:
+            driver.shutdown()

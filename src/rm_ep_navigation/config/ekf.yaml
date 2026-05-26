@@ -1,0 +1,86 @@
+# robot_localization EKF 融合配置
+# 融合 EP 里程计 (/odom) 和 IMU (/imu)，输出 /odometry/filtered
+
+frequency: 30
+sensor_timeout: 0.1
+two_d_mode: true
+
+# TF 框架
+map_frame: map
+odom_frame: odom
+base_link_frame: base_link
+world_frame: odom
+
+# 发布 odom -> base_link 的 TF 变换
+publish_tf: true
+publish_acceleration: false
+
+# ========================
+# 输入1: EP 里程计 /odom
+# ========================
+odom0: /odom
+odom0_config:
+  [true,  true,  false,   # x, y, z (位置)
+   false, false, true,    # roll, pitch, yaw (姿态)
+   true,  true,  false,   # vx, vy, vz (线速度)
+   false, false, true,    # vroll, vpitch, vyaw (角速度)
+   false, false, false]   # ax, ay, az (线加速度)
+
+odom0_queue_size: 10
+odom0_nodelay: true
+odom0_differential: false
+odom0_relative: false
+
+# ========================
+# 输入2: EP IMU /imu
+# ========================
+imu0: /imu
+imu0_config:
+  [false, false, false,   # x, y, z (位置)
+   true,  true,  true,    # roll, pitch, yaw (姿态)
+   false, false, false,   # vx, vy, vz (线速度)
+   true,  true,  true,    # vroll, vpitch, vyaw (角速度)
+   true,  true,  true]    # ax, ay, az (线加速度)
+
+imu0_queue_size: 10
+imu0_nodelay: true
+imu0_differential: false
+imu0_relative: false
+
+# ========================
+# 过程噪声协方差
+# ========================
+process_noise_covariance:
+  [0.05, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0.05, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0.06, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0.06, 0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0.25, 0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0.25, 0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0.5,  0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0.1,  0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.1,  0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.1,  0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.15, 0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.15, 0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0.15]
+
+# 初始状态协方差
+initial_estimate_covariance:
+  [1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,
+   0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9]

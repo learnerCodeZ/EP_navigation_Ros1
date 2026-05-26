@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rm_ep_navigation</name>
+  <version>0.1.0</version>
+  <description>RoboMaster EP 建图与导航配置包，包含 gmapping、amcl、move_base、robot_localization 和 teb_local_planner 的配置及启动文件</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>gmapping</depend>
+  <depend>amcl</depend>
+  <depend>move_base</depend>
+  <depend>map_server</depend>
+  <depend>robot_localization</depend>
+  <depend>teb_local_planner</depend>
+  <depend>rm_ep_driver</depend>
+  <depend>rm_ep_description</depend>
+  <depend>rplidar_ros</depend>
+
+  <export>
+  </export>
+</package>

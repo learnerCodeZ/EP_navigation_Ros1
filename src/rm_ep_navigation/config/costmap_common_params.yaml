@@ -1,0 +1,26 @@
+# 通用代价地图参数 (全局和局部共用)
+
+# 障碍物检测范围
+obstacle_range: 3.0            # 传感器数据引入代价地图的最大距离 (m)
+raytrace_range: 3.5            # 传感器数据清除障碍物的最大距离 (m)
+
+# 机器人足迹 (RoboMaster EP 约 0.32m x 0.24m)
+footprint: [[-0.18, -0.14], [-0.18, 0.14], [0.18, 0.14], [0.18, -0.14]]
+
+# 膨胀 (障碍物周围的安全距离)
+inflation_radius: 0.30         # 膨胀半径 (m)
+cost_scaling_factor: 3.0       # 代价衰减因子
+
+# 传感器配置
+observation_sources: scan
+
+scan:
+  data_type: LaserScan
+  topic: /scan
+  marking: true
+  clearing: true
+  min_obstacle_height: 0.0     # 最小障碍物高度 (m)
+  max_obstacle_height: 0.30    # 最大障碍物高度 (m)
+  obstacle_range: 3.0
+  raytrace_range: 3.5
+  inf_is_valid: false

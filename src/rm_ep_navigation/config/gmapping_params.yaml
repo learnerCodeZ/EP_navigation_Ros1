@@ -1,0 +1,42 @@
+# gmapping SLAM 参数
+
+# 地图
+map_update_interval: 1.0      # 地图更新间隔 (秒)
+maxUrange: 8.0                # 激光雷达最大可用距离 (m)
+maxRange: 8.0                 # 激光雷达最大距离 (m)
+sigma: 0.05                   # 端点匹配标准差
+kernelSize: 1                 # 查找对应点时使用的内核大小
+lstep: 0.05                   # 平移采样步长 (m)
+astep: 0.05                   # 旋转采样步长 (rad)
+iterations: 5                 # 扫描匹配迭代次数
+lsigma: 0.075                 # 波束似然标准差
+ogain: 3.0                    # 评估似然时的增益
+lskip: 0                      # 跳过的波束数 (0 = 全部使用)
+minimumScore: 50              # 扫描匹配的最低得分
+
+# 里程计模型参数
+srr: 0.1                      # 平移时平移误差 (m/m)
+srt: 0.2                      # 平移时旋转误差 (rad/m)
+str: 0.1                      # 旋转时平移误差 (m/rad)
+stt: 0.2                      # 旋转时旋转误差 (rad/rad)
+
+# 更新条件
+linearUpdate: 0.5             # 平移超过此距离才处理扫描 (m)
+angularUpdate: 0.2            # 旋转超过此角度才处理扫描 (rad)
+temporalUpdate: -1.0          # 时间更新 (负值 = 禁用)
+
+# 粒子滤波器
+resampleThreshold: 0.5        # 重采样阈值 (0-1)
+particles: 30                 # 粒子数量
+xmin: -20.0                   # 地图初始 x 最小值 (m)
+ymin: -20.0                   # 地图初始 y 最小值 (m)
+xmax: 20.0                    # 地图初始 x 最大值 (m)
+ymax: 20.0                    # 地图初始 y 最大值 (m)
+delta: 0.05                   # 地图分辨率 (m/像素)
+llsamplerange: 0.01           # 线性采样范围
+llsamplestep: 0.01            # 线性采样步长
+lasamplerange: 0.005          # 角度采样范围
+lasamplestep: 0.005           # 角度采样步长
+
+# TF
+transform_publish_period: 0.05 # TF 发布周期 (秒)

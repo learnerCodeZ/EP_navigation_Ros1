@@ -1,0 +1,19 @@
+# 全局代价地图参数
+
+global_costmap:
+  global_frame: map
+  robot_base_frame: base_link
+  update_frequency: 2.0
+  publish_frequency: 0.5
+  static_map: true
+  rolling_window: false
+  transform_tolerance: 0.5
+  width: 20.0
+  height: 20.0
+  resolution: 0.05
+
+  # 插件
+  plugins:
+    - {name: static_map,       type: "costmap_2d::StaticLayer"}
+    - {name: obstacles,        type: "costmap_2d::VoxelLayer"}
+    - {name: inflation_layer,  type: "costmap_2d::InflationLayer"}
