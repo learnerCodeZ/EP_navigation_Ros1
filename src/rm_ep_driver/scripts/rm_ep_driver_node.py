@@ -72,16 +72,11 @@ class RmEpDriver:
         self.ep_robot = rm_robot.Robot()
 
         conn_type = self.ep_conn_type
-        kwargs = {"conn_type": conn_type}
+        sn = self.ep_sn if self.ep_sn else None
 
-        if self.ep_sn and conn_type == "sta":
-            kwargs["sn"] = self.ep_sn
-        if self.ep_ip:
-            kwargs["ip"] = self.ep_ip
-
-        rospy.loginfo("正在连接 RoboMaster EP (conn_type=%s)...", conn_type)
+        rospy.loginfo("正在连接 RoboMaster EP (conn_type=%s, sn=%s)...", conn_type, sn)
         try:
-            self.ep_robot.initialize(**kwargs)
+            self.ep_robot.initialize(conn_type=conn_type, sn=sn)
             version = self._safe_call(self.ep_robot.get_version)
             rospy.loginfo("RoboMaster EP 连接成功, 固件版本: %s", version)
         except Exception as e:
@@ -93,8 +88,6 @@ class RmEpDriver:
             rospy.loginfo("电池电量: %s%%", battery)
         except Exception:
             rospy.logwarn("无法获取电池信息")
-            self.ep_robot = None
-            pass
 
     def _start_data_streams(self):
         chassis = self.ep_robot.chassis
@@ -330,7 +323,7 @@ class RmEpDriver:
 
         vx = msg.linear.x
         vy = msg.linear.y
-        vz_rad = msg.angular.z
+        vz_rad = -msg.angular.z
         vz_deg = vz_rad * 180.0 / math.pi
 
         max_v = 2.0
