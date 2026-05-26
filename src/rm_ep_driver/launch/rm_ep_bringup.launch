@@ -1,14 +1,14 @@
 <launch>
   <arg name="ep_sn" default="" doc="RoboMaster EP 序列号 (SN)"/>
-  <arg name="ep_conn_type" default="sta" doc="连接模式: sta(路由器) / ap(直连)"/>
+  <arg name="ep_conn_type" default="ap" doc="连接模式: sta(路由器) / ap(直连)"/>
   <arg name="ep_ip" default="" doc="EP IP地址"/>
   <arg name="enable_cmd_vel" default="true" doc="是否启用速度控制"/>
 
   <node name="rm_ep_driver" pkg="rm_ep_driver" type="rm_ep_driver_node.py" output="screen" required="true">
-    <param name="ep_sn" value="$(arg ep_sn)"/>
-    <param name="ep_conn_type" value="$(arg ep_conn_type)"/>
-    <param name="ep_ip" value="$(arg ep_ip)"/>
-    <param name="enable_cmd_vel" value="$(arg enable_cmd_vel)"/>
     <rosparam file="$(find rm_ep_driver)/config/rm_ep_params.yaml" command="load"/>
+    <param name="ep_sn" value="$(arg ep_sn)" unless="$(eval arg('ep_sn') == '')"/>
+    <param name="ep_conn_type" value="$(arg ep_conn_type)"/>
+    <param name="ep_ip" value="$(arg ep_ip)" unless="$(eval arg('ep_ip') == '')"/>
+    <param name="enable_cmd_vel" value="$(arg enable_cmd_vel)"/>
   </node>
 </launch>
