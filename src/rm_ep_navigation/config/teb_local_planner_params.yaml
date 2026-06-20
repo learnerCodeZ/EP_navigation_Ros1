@@ -10,10 +10,10 @@ TebLocalPlannerROS:
   # ========================
   # 速度限制
   # ========================
-  max_vel_x: 0.5               # 前向最大速度 (m/s)
+  max_vel_x: 0.8               # 前向最大速度 (m/s)
   max_vel_y: 0.3               # 横向最大速度 (m/s) 麦轮支持侧移
-  max_vel_theta: 0.8           # 最大旋转速度 (rad/s)
-  max_vel_x_backwards: 0.3     # 后退最大速度 (m/s)
+  max_vel_theta: 1.0           # 最大旋转速度 (rad/s)
+  max_vel_x_backwards: 0.8     # 后退最大速度 (m/s)
   acc_lim_x: 0.5               # 前向最大加速度 (m/s^2)
   acc_lim_y: 0.3               # 横向最大加速度 (m/s^2)
   acc_lim_theta: 1.0           # 最大旋转加速度 (rad/s^2)
@@ -28,7 +28,7 @@ TebLocalPlannerROS:
   # ========================
   # 轨迹配置
   # ========================
-  dt_ref: 0.3                  # 局部路径规划的期望时间分辨率 (s)
+  dt_ref: 0.1                  # 局部路径规划的期望时间分辨率 (s)
   dt_hysteresis: 0.05          # 允许的滞后时间差 (s)
   min_samples: 3               # 最小轨迹采样数
   global_plan_overwrite_orientation: true
@@ -44,7 +44,7 @@ TebLocalPlannerROS:
   include_costmap_obstacles: true
   costmap_obstacles_behind_robot_dist: 1.5
   obstacle_poses_affected: 30
-  inflation_dist: 0.5
+  inflation_dist: 0.3
 
   # ========================
   # 足迹模型 (多边形)

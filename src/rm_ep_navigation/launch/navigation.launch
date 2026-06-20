@@ -4,12 +4,12 @@
   <!-- ============================================ -->
 
   <!-- 参数 -->
-  <arg name="ep_sn" default="" doc="RoboMaster EP 序列号"/>
-  <arg name="ep_conn_type" default="sta" doc="连接模式"/>
+  <arg name="ep_sn" default="3JKDH3B001891M" doc="RoboMaster EP 序列号"/>
+  <arg name="ep_conn_type" default="rndis" doc="连接模式: ap(WiFi直连) / sta(路由器) / rndis(USB)"/>
   <arg name="ep_ip" default="" doc="EP IP 地址"/>
   <arg name="lidar_frame" default="laser_link" doc="激光雷达 TF 帧名"/>
   <arg name="serial_port" default="/dev/ttyUSB0" doc="激光雷达串口号"/>
-  <arg name="map_file" default="$(find rm_ep_navigation)/maps/map_test.yaml" doc="地图文件路径"/>
+  <arg name="map_file" default="$(find rm_ep_navigation)/maps/default_map.yaml" doc="地图文件路径"/>
   <arg name="rviz" default="true" doc="是否启动 RVIZ"/>
 
   <!-- ========== 1. 机器人模型 (URDF + TF) ========== -->
@@ -18,14 +18,14 @@
   <!-- ========== 2. RPLIDAR A2 激光雷达驱动 ========== -->
   <node name="rplidarNode" pkg="rplidar_ros" type="rplidarNode" output="screen">
     <param name="serial_port"     type="string" value="$(arg serial_port)"/>
-    <param name="serial_baudrate" type="int"    value="115200"/>
+    <param name="serial_baudrate" type="int"    value="256000"/>
     <param name="frame_id"        type="string" value="$(arg lidar_frame)"/>
     <param name="inverted"        type="bool"   value="false"/>
     <param name="angle_compensate" type="bool"  value="true"/>
   </node>
 
   <!-- ========== 3. RoboMaster EP 驱动 ========== -->
-  <include file="$(find rm_ep_driver)/launch/rm_ep_bringup.launch">
+  <include file="$(find rm_ep_driver)/launch/rm_ep_chassis_bringup.launch">
     <arg name="ep_sn" value="$(arg ep_sn)"/>
     <arg name="ep_conn_type" value="$(arg ep_conn_type)"/>
     <arg name="ep_ip" value="$(arg ep_ip)"/>
@@ -60,5 +60,5 @@
 
   <!-- ========== 8. RVIZ 可视化 ========== -->
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find rm_ep_navigation)/rviz/mapping_nav.rviz"/>
+        args="-d $(find rm_ep_navigation)/rviz/nav.rviz"/>
 </launch>
