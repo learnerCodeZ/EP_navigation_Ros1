@@ -5,7 +5,7 @@ RoboMaster EP 键盘遥控节点
 麦轮全向移动控制（以 k 为中心的九宫格）:
   u  i  o       前左  前  前右
   j  k  l   =>  左   停  右
-  m  >  .       后左  后  后右
+  m  ,  .       后左  后  后右
 
 空格: 急停  r: 切换速度档位
 """
@@ -28,7 +28,7 @@ KEY_BINDINGS = {
     'k': ( 0,  0,  0),
     'l': ( 0, -1,  0),
     'm': (-1, -1,  0),
-    '>': (-1,  0,  0),
+    ',': (-1,  0,  0),
     '.': (-1,  1,  0),
 }
 
@@ -75,7 +75,7 @@ def main():
                   speed_level, *SPEED_LEVELS[speed_level])
     rospy.loginfo("  u  i  o      前左 前 前右")
     rospy.loginfo("  j  k  l  =>  左  停 右")
-    rospy.loginfo("  m  >  .      后左 后 后右")
+    rospy.loginfo("  m  ,  .      后左 后 后右")
     rospy.loginfo("空格: 急停  r: 换挡")
     rospy.loginfo("=" * 40)
 
