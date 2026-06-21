@@ -7,7 +7,7 @@
 ## 工作空间结构
 
 ```
-catkin_ws/
+EP_navigation_Ros1/
 └── src/
     ├── rplidar_ros/              思岚 RPLIDAR A2 激光雷达驱动
     ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动
@@ -112,7 +112,7 @@ pip3 install robomaster -i https://pypi.tuna.tsinghua.edu.cn/simple
 ### 3. 编译
 
 ```bash
-cd ~/catkin_ws
+cd ~/EP_navigation_Ros1
 catkin_make
 source devel/setup.bash
 ```
@@ -122,7 +122,7 @@ source devel/setup.bash
 ### 底盘控制
 
 ```bash
-source ~/catkin_ws/devel/setup.bash
+source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 启动底盘驱动（USB 模式，默认）
 roslaunch rm_ep_driver rm_ep_chassis_bringup.launch
@@ -176,7 +176,7 @@ roslaunch rm_ep_navigation mapping.launch use_hi12:=false enable_imu:=true
 ### 建图
 
 ```bash
-source ~/catkin_ws/devel/setup.bash
+source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 启动建图（USB 模式）
 roslaunch rm_ep_navigation mapping.launch
@@ -203,11 +203,11 @@ rosrun rm_ep_navigation save_map.sh my_map
 ### 导航
 
 ```bash
-source ~/catkin_ws/devel/setup.bash
+source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 加载地图并启动导航
 roslaunch rm_ep_navigation navigation.launch \
-  map_file:=/home/你的用户名/catkin_ws/src/rm_ep_navigation/maps/my_map.yaml
+  map_file:=/home/你的用户名/EP_navigation_Ros1/src/rm_ep_navigation/maps/my_map.yaml
 
 # 在 RVIZ 中使用 "2D Nav Goal" 工具点击目标点即可
 ```

@@ -3,7 +3,7 @@
 ## 工作空间结构
 
 ```text
-catkin_ws/
+EP_navigation_Ros1/
 ├── src/
 │   ├── rm_ep_driver/          # EP 底盘驱动
 │   │   ├── launch/            # rm_ep_chassis_bringup.launch, teleop.launch
@@ -203,7 +203,7 @@ conn_type = conn_type_map.get(self.ep_conn_type, self.ep_conn_type)
 
 ```bash
 # 确认依赖已安装
-cd ~/catkin_ws
+cd ~/EP_navigation_Ros1
 rosdep install --from-paths src --ignore-src -r -y
 
 # 清理后重新编译
@@ -246,7 +246,7 @@ pip3 install robomaster
 确认依赖已安装：
 
 ```bash
-cd ~/catkin_ws
+cd ~/EP_navigation_Ros1
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
