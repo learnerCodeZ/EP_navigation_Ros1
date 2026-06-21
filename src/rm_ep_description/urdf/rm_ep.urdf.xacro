@@ -93,7 +93,7 @@
   <joint name="laser_joint" type="fixed">
     <parent link="base_link"/>
     <child link="laser_link"/>
-    <origin xyz="${laser_x} 0 ${chassis_height/2 + laser_z}" rpy="0 0 0"/>
+    <origin xyz="${laser_x} 0 ${chassis_height/2 + laser_z}" rpy="0 0 3.14159"/>
   </joint>
 
   <!-- ========== 四个麦克纳姆轮 ========== -->
