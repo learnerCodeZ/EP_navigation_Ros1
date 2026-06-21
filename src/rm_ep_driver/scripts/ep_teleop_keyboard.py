@@ -2,12 +2,11 @@
 """
 RoboMaster EP 键盘遥控节点
 
-麦轮全向移动控制:
+麦轮全向移动控制（以 k 为中心的九宫格）:
   u  i  o       前左  前  前右
   j  k  l   =>  左   停  右
-  m  ,  .       后左  后  后右
+  m  >  .       后左  后  后右
 
-w/s: 前进/后退  a/d: 左移/右移  q/e: 左转/右转
 空格: 急停  r: 切换速度档位
 """
 
@@ -21,14 +20,7 @@ from geometry_msgs.msg import Twist
 
 # 按键 -> (vx, vy, vz) 映射，麦轮全向控制
 KEY_BINDINGS = {
-    # 前进后退 + 左右平移 + 旋转
-    'w': ( 1,  0,  0),
-    's': (-1,  0,  0),
-    'a': ( 0,  1,  0),
-    'd': ( 0, -1,  0),
-    'q': ( 0,  0,  1),
-    'e': ( 0,  0, -1),
-    # 组合方向
+    # 九宫格方向
     'u': ( 1,  1,  0),
     'i': ( 1,  0,  0),
     'o': ( 1, -1,  0),
@@ -36,15 +28,8 @@ KEY_BINDINGS = {
     'k': ( 0,  0,  0),
     'l': ( 0, -1,  0),
     'm': (-1, -1,  0),
-    ',': (-1,  0,  0),
+    '>': (-1,  0,  0),
     '.': (-1,  1,  0),
-    # 大写 = 加速版
-    'W': ( 2,  0,  0),
-    'S': (-2,  0,  0),
-    'A': ( 0,  2,  0),
-    'D': ( 0, -2,  0),
-    'Q': ( 0,  0,  2),
-    'E': ( 0,  0, -2),
 }
 
 SPEED_LEVELS = [
@@ -88,9 +73,10 @@ def main():
     rospy.loginfo("EP 键盘遥控已启动")
     rospy.loginfo("当前档位: %d (%.1f m/s, %.1f m/s, %.1f rad/s)",
                   speed_level, *SPEED_LEVELS[speed_level])
-    rospy.loginfo("w/s:前后 a/d:左右 q/e:旋转")
-    rospy.loginfo("u/i/o/j/k/l/m/,/.: 八方向")
-    rospy.loginfo("大写: 加速  空格:急停  r:换挡")
+    rospy.loginfo("  u  i  o      前左 前 前右")
+    rospy.loginfo("  j  k  l  =>  左  停 右")
+    rospy.loginfo("  m  >  .      后左 后 后右")
+    rospy.loginfo("空格: 急停  r: 换挡")
     rospy.loginfo("=" * 40)
 
     while not rospy.is_shutdown():
