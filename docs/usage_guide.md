@@ -95,6 +95,8 @@ echo "source ~/EP_navigation_Ros1/devel/setup.bash" >> ~/.bashrc
 
 将 RPLIDAR A2 通过 USB 连接电脑，确认设备识别：
 
+> **安装方向**：雷达线缆朝车头安装，0° 扫描方向与 ROS X 轴正方向一致，无需翻转补偿。
+
 ```bash
 ls /dev/ttyUSB0
 ```

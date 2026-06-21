@@ -184,9 +184,28 @@ roslaunch rm_ep_navigation mapping.launch
 # 指定 SN 或其他连接模式
 roslaunch rm_ep_navigation mapping.launch ep_sn:=YOUR_EP_SN ep_conn_type:=sta
 
-# 通过遥控或键盘控制 EP 遍历环境
-# 地图满意后，另开终端保存:
+# 键盘遥控（另开终端）
+roslaunch rm_ep_driver teleop_keyboard.launch
+```
+
+键盘布局（麦轮全向控制）：
+
+```
+  u  i  o      前左转 前 前右转
+  j  k  l  =>  左转   停 右转
+  m  ,  .      后左转 后 后右转
+```
+
+空格急停，r 切换速度档位。
+
+地图满意后保存：
+
+```bash
+# 另开终端，指定名称
 rosrun rm_ep_navigation save_map.sh 教室
+
+# 不指定名称则用时间自动命名（如 20260621_153045）
+rosrun rm_ep_navigation save_map.sh
 ```
 
 建图 launch 参数：
@@ -327,7 +346,7 @@ conn_type_map = {
 ## 硬件连接
 
 1. EP 通过 USB 线连接电脑（RNDIS 模式，默认），或通过 WiFi 连接同一路由器（STA 模式）
-2. RPLIDAR A2 通过 USB 连接电脑，默认串口 `/dev/ttyUSB0`
+2. RPLIDAR A2 通过 USB 连接电脑，默认串口 `/dev/ttyUSB0`（安装时线缆朝车头，0° 与 ROS X 轴一致）
 3. HI12 外置 IMU 通过 USB-TTL 模块连接电脑，默认 `/dev/hi12_imu`（详见 [HI12 安装方案](docs/hi12_installation_plan.md)）
 4. 如需指定其他串口，在 launch 中添加 `serial_port:=/dev/ttyUSB1`
 
