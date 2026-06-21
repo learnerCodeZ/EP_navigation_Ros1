@@ -29,14 +29,15 @@ rosrun rm_ep_navigation save_map.sh [地图名称]
 
 | 包 | 路径 | 语言 | 说明 |
 |---|---|---|---|
-| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`，订阅 `/cmd_vel` |
-| `rm_ep_navigation` | `src/rm_ep_navigation/` | 纯配置 | 建图(gmapping)、导航(AMCL+TEB)、EKF融合 |
+| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`（默认由 HI12 提供），订阅 `/cmd_vel`；含 HI12 驱动节点 |
+| `rm_ep_navigation` | `src/rm_ep_navigation/` | 纯配置 | 建图(gmapping)、导航(AMCL+TEB)、EKF融合（HI12 提供绝对航向） |
 | `rm_ep_description` | `src/rm_ep_description/` | 纯配置 | URDF 模型与 STL 网格，定义 TF 树 |
 | `rplidar_ros` | `src/rplidar_ros/` | C++ (C++11) | RPLIDAR A2 激光雷达驱动，自带 SDK 源码编译 |
 
 ## 入口点
 
 - **驱动主节点**: `src/rm_ep_driver/scripts/rm_ep_driver_node.py` (RmEpDriver 类)
+- **HI12 驱动节点**: `src/rm_ep_driver/scripts/hi12_imu_node.py` (读取 HI12 串口，发布 `/imu`)
 - **底盘 launch**: `src/rm_ep_driver/launch/rm_ep_chassis_bringup.launch` (新建图/导航流程使用)
 - **旧版底盘 launch**: `src/rm_ep_driver/launch/rm_ep_bringup.launch` (通过 yaml 加载参数)
 - **建图 launch**: `src/rm_ep_navigation/launch/mapping.launch`
@@ -44,8 +45,8 @@ rosrun rm_ep_navigation save_map.sh [地图名称]
 
 ## 配置文件
 
-- `src/rm_ep_driver/config/rm_ep_params.yaml` - EP 连接参数（SN、连接类型、IMU、TF 帧名、协方差等）
-- `src/rm_ep_navigation/config/ekf.yaml` - EKF 融合（odom + IMU，发布 odom→base_link TF）
+- `src/rm_ep_driver/config/rm_ep_params.yaml` - EP 连接参数、HI12 串口参数、IMU 开关
+- `src/rm_ep_navigation/config/ekf.yaml` - EKF 融合（odom + HI12 IMU，绝对航向模式）
 - `src/rm_ep_navigation/config/gmapping_params.yaml` - gmapping SLAM 参数
 - `src/rm_ep_navigation/config/amcl_params.yaml` - AMCL 定位参数（omni-corrected 里程计模型）
 - `src/rm_ep_navigation/config/costmap_common_params.yaml` - 通用代价地图
@@ -55,6 +56,7 @@ rosrun rm_ep_navigation save_map.sh [地图名称]
 
 - DJI RoboMaster EP（需安装 `pip3 install robomaster`）
 - RPLIDAR A2 激光雷达（串口 `/dev/ttyUSB0`，波特率 256000）
+- HiPNUC HI12 AHRS 外置 IMU（通过 USB-TTL 连接，默认 `/dev/hi12_imu`，详见 `docs/hi12_installation_plan.md`）
 - EP 连接模式：`rndis`(USB，默认) / `ap`(WiFi直连) / `sta`(路由器)
 
 ## TF 树结构
@@ -78,6 +80,8 @@ SDK 坐标系与 ROS REP-103 差异：y 轴方向相反，yaw 方向相反。驱
 - cmd_vel：`x=x, y=-y, z=-z`
 
 **修改任何坐标映射时必须保持 odom 和 cmd_vel 一致。**
+
+> 以上坐标映射仅适用于 EP SDK 数据。HI12 外置 IMU 不经过 SDK，直接输出标准物理量，无需坐标变换。
 
 SDK 使用 `is` 比较字符串，必须使用 SDK 常量对象（`rm_conn.CONNECTION_USB_RNDIS` 等）。
 

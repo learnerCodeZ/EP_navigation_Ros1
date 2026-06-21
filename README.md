@@ -2,13 +2,15 @@
 
 基于 ROS Noetic 的 DJI RoboMaster EP 自动建图（SLAM）与自主导航系统。
 
+支持外接 HiPNUC HI12 AHRS 模块替换 EP 内置 IMU，解决里程计漂移问题（详见 [docs/hi12_installation_plan.md](docs/hi12_installation_plan.md)）。
+
 ## 工作空间结构
 
 ```
 catkin_ws/
 └── src/
     ├── rplidar_ros/              思岚 RPLIDAR A2 激光雷达驱动
-    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点
+    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动
     ├── rm_ep_description/        EP 机器人 URDF 模型
     └── rm_ep_navigation/         建图与导航配置包
 ```
@@ -22,8 +24,9 @@ catkin_ws/
 | 数据 | 话题 | 方向 | 说明 |
 |------|------|------|------|
 | 里程计 | `/odom` | 发布 | 底盘编码器推算，frame_id=`odom`，child=`base_link` |
-| IMU | `/imu` | 发布 | 姿态 + 角速度 + 加速度，frame_id=`imu_link` |
+| IMU | `/imu` | 发布 | 姿态 + 角速度 + 加速度（默认由 HI12 提供，可通过参数切回 EP 内置 IMU），frame_id=`imu_link` |
 | 速度指令 | `/cmd_vel` | 订阅 | 转为 EP 全向麦轮控制 |
+| HI12 IMU 数据 | `/imu` | 发布 | hi12_imu_node.py，读取 HI12 串口输出，发布标准 IMU 消息 |
 
 驱动支持两种速度控制模式：
 - **底盘速度模式**（默认）：`drive_speed(x, y, z)`，直接发送底盘速度
@@ -143,6 +146,24 @@ roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=sta
 | `ep_ip` | (空) | EP IP 地址（留空则通过 SN 自动发现） |
 | `enable_cmd_vel` | `true` | 是否启用 `/cmd_vel` |
 | `odom_rate` | `20` | 里程计发布频率 (Hz) |
+| `enable_imu` | `false` | 是否启用 EP 内置 IMU（使用 HI12 时禁用） |
+
+### HI12 外置 IMU
+
+项目默认使用 HiPNUC HI12 AHRS 模块替代 EP 内置 IMU。HI12 通过 USB-TTL 连接上位机，提供 9 轴融合姿态数据。
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `hi12_port` | `/dev/hi12_imu` | HI12 串口设备 |
+| `hi12_baud` | `115200` | HI12 波特率 |
+| `use_hi12` | `true` | 是否使用 HI12（false 则切回 EP 内置 IMU） |
+
+更多安装和配置细节见：[HI12 安装方案](docs/hi12_installation_plan.md)。
+
+```bash
+# 切回 EP 内置 IMU
+roslaunch rm_ep_navigation mapping.launch use_hi12:=false enable_imu:=true
+```
 
 ### EP 连接模式
 
@@ -260,8 +281,8 @@ inflation_radius: 0.30    # 膨胀半径 (m)，在 costmap_common_params 中
 **EKF 融合策略** (`ekf.yaml`)：
 
 - **odom**：绝对位置 X,Y + 世界坐标系速度 vx,vy + 角速度 vyaw
-- **IMU**：绝对 Yaw 角 + 角速度 vyaw + 加速度 ax,ay
-- `imu0_relative: true`：上电瞬间 yaw 视为 0 度
+- **IMU（HI12）**：绝对 Yaw 角（磁力计提供）+ 角速度 vyaw + 加速度 ax,ay
+- `imu0_relative: false`：使用绝对航向（HI12 有磁力计，无需相对模式）
 
 **AMCL 定位** (`amcl_params.yaml`)：
 
@@ -288,6 +309,8 @@ RoboMaster SDK 坐标系与 ROS REP-103 标准的差异：
 
 **修改任何坐标映射时必须保持 odom 和 cmd_vel 一致。**
 
+> **注意**：以上坐标映射仅适用于 EP SDK 获取的数据。外置 HI12 IMU 不经过 EP SDK，直接输出标准物理量，**无需任何坐标变换**。只要硬件安装时 HI12 坐标系与 `base_link` 对齐即可。
+
 SDK 使用 `is` 比较字符串，驱动必须使用 SDK 常量对象：
 
 ```python
@@ -303,7 +326,8 @@ conn_type_map = {
 
 1. EP 通过 USB 线连接电脑（RNDIS 模式，默认），或通过 WiFi 连接同一路由器（STA 模式）
 2. RPLIDAR A2 通过 USB 连接电脑，默认串口 `/dev/ttyUSB0`
-3. 如需指定其他串口，在 launch 中添加 `serial_port:=/dev/ttyUSB1`
+3. HI12 外置 IMU 通过 USB-TTL 模块连接电脑，默认 `/dev/hi12_imu`（详见 [HI12 安装方案](docs/hi12_installation_plan.md)）
+4. 如需指定其他串口，在 launch 中添加 `serial_port:=/dev/ttyUSB1`
 
 ## 常见问题
 
@@ -333,7 +357,15 @@ sudo usermod -a -G dialout $USER
 
 **Q: 里程计漂移严重**
 
-EP 麦轮在光滑地面容易打滑，建图时尽量低速平稳移动。EKF 融合 IMU 可部分改善，但无法完全消除。
+EP 麦轮在光滑地面容易打滑。项目默认使用外置 HI12 IMU 提供更准确的航向参考。如使用 EP 内置 IMU，建图时尽量低速平稳移动。
+
+**Q: HI12 IMU 不工作**
+
+```bash
+# 检查串口设备（确认 USB-TTL 已连接）
+ls /dev/hi12_imu /dev/ttyUSB*
+# 检查 IMU 数据
+rostopic echo /imu
 
 **Q: 导航时 TEB 报错**
 
