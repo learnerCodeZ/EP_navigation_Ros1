@@ -133,20 +133,18 @@ HI12 使用 HiPNUC 自定义二进制协议，通过 UART 输出数据帧：
 
 **关键原则：远离电机和电调，减少电磁干扰**。
 
-推荐安装位置：EP 底盘**顶部**，激光雷达**旁边或对面**，尽量远离底盘中心电机区域。
+HI12 安装在 EP 底盘顶部右侧，长度中间位置，距车宽中心 6cm。
 
 ```
-             EP 顶部俯视图
+             EP 顶部俯视图 (28cm x 22cm)
     ┌──────────────────────────┐
+    │           ★ RPLIDAR A2   │
+    │         (前方居中)        │
     │                          │
-    │   ★ RPLIDAR A2           │
-    │   (前方)                  │
-    │                          │
-    │        [底盘中心/电机]     │
-    │                          │
-    │              ★ HI12      │
-    │              (后方偏上)    │
-    │                          │
+    │    [底盘中心/base_link]   ● HI12
+    │                          │ (右侧偏6cm)
+    │       上位机              │
+    │       (后方)              │
     └──────────────────────────┘
 ```
 
@@ -319,22 +317,20 @@ process_noise_covariance:
 
 **文件**：`src/rm_ep_description/urdf/rm_ep.urdf.xacro`
 
-如果 HI12 安装位置与 EP 原内置 IMU 不同（当前 `imu_link` 在底盘中心 `(0, 0, chassis_height/2)`），需要更新 `imu_joint` 的 `origin`：
+HI12 安装位置：长度中间，右侧偏 6cm，底盘顶部。更新 `imu_joint` 的 `origin`：
 
 ```xml
-<!-- 如果 HI12 安装在底盘后方偏上（举例） -->
 <joint name="imu_joint" type="fixed">
   <parent link="base_link"/>
   <child link="imu_link"/>
-  <!-- 修改 xyz 为 HI12 实际安装位置 -->
-  <origin xyz="-0.08 0 0.10" rpy="0 0 0"/>
+  <origin xyz="0 -0.06 0.10" rpy="0 0 0"/>
 </joint>
 ```
 
 **如果 HI12 的坐标系方向与 base_link 不同**（模块朝向偏转），需设置 `rpy`。例如 HI12 箭头朝后：
 
 ```xml
-<origin xyz="-0.08 0 0.10" rpy="0 0 3.14159"/>
+<origin xyz="0 -0.06 0.10" rpy="0 0 3.14159"/>
 ```
 
 具体值需根据实际安装确定。

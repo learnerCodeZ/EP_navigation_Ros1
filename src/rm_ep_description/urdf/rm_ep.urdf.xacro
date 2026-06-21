@@ -36,18 +36,18 @@
   </xacro:macro>
 
   <!-- ========== 底盘参数 ========== -->
-  <xacro:property name="chassis_length" value="0.32"/>
-  <xacro:property name="chassis_width" value="0.24"/>
+  <xacro:property name="chassis_length" value="0.28"/>
+  <xacro:property name="chassis_width" value="0.22"/>
   <xacro:property name="chassis_height" value="0.10"/>
   <xacro:property name="chassis_clearance" value="0.045"/>
 
   <xacro:property name="wheel_radius" value="0.0485"/>
   <xacro:property name="wheel_width" value="0.04"/>
-  <xacro:property name="wheel_base" value="0.26"/>
-  <xacro:property name="wheel_track" value="0.20"/>
+  <xacro:property name="wheel_base" value="0.24"/>
+  <xacro:property name="wheel_track" value="0.18"/>
 
-  <!-- 激光雷达安装位置 (底盘顶部前偏) -->
-  <xacro:property name="laser_x" value="0.05"/>
+  <!-- 激光雷达安装位置 (底盘顶部最前方居中) -->
+  <xacro:property name="laser_x" value="0.11"/>
   <xacro:property name="laser_z" value="0.10"/>
 
   <!-- ========== base_link ========== -->
@@ -68,15 +68,15 @@
     </visual>
   </link>
 
-  <!-- ========== imu_link (HI12 外置 IMU，安装于底盘后方偏上) ========== -->
+  <!-- ========== imu_link (HI12 外置 IMU) ========== -->
   <link name="imu_link"/>
 
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
-    <!-- HI12 安装位置: 底盘后方 (-0.08m)，居中 (0m)，底盘顶部偏上 (0.10m)
+    <!-- HI12 安装位置: 长度中间 (x=0)，右侧偏 6cm (y=-0.06)，底盘顶部 (z=0.10)
          模块 X 轴朝前、Y 轴朝左、Z 轴朝上，与 base_link 对齐，rpy=0 -->
-    <origin xyz="-0.08 0 0.10" rpy="0 0 0"/>
+    <origin xyz="0 -0.06 0.10" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== laser_link (RPLIDAR A2 安装位置) ========== -->
@@ -84,10 +84,10 @@
     <visual>
       <origin xyz="0 0 0.02" rpy="0 0 0"/>
       <geometry>
-        <cylinder radius="0.048" length="0.04"/>
+        <cylinder radius="0.03" length="0.04"/>
       </geometry>
       <material name="laser_blue"/>
-    </visual>
+      </visual>
   </link>
 
   <joint name="laser_joint" type="fixed">

@@ -61,7 +61,7 @@ move_base / teleop → /cmd_vel → 驱动节点 → SDK drive_speed
 - `odom` — 里程计坐标系（EKF 发布 odom→base_link TF）
 - `base_link` — 机器人基座坐标系
 - `laser_link` — 激光雷达坐标系（URDF fixed 关节）
-- `imu_link` — IMU 坐标系（在旋转中心）
+- `imu_link` — IMU 坐标系（右侧偏 6cm，长度中间）
 
 ### TF 树
 
@@ -74,6 +74,30 @@ map ──(gmapping/amcl)──► odom ──(EKF)──► base_link ──(UR
 ```
 
 **重要**：底盘驱动不发布 TF，由 EKF 统一发布 `odom→base_link`。
+
+### 硬件安装位置
+
+机器人尺寸：28cm（长）x 22cm（宽）
+
+base_link 原点在底盘几何中心，前方 +X，左方 +Y，上方 +Z。
+
+| 部件 | 安装位置 (相对 base_link) | URDF 坐标 |
+|------|--------------------------|-----------|
+| RPLIDAR A2 | 最前方，宽度居中，底盘顶部 | x=0.11, y=0, z=0.15 |
+| HI12 IMU | 长度中间，右侧偏 6cm，底盘顶部 | x=0, y=-0.06, z=0.10 |
+
+```
+             EP 顶部俯视图
+  ┌──────────────────────────┐
+  │           ● RPLIDAR      │
+  │         (前方居中)        │
+  │                          │
+  │      [底盘中心/base_link] ● HI12
+  │                          │ (右侧偏6cm)
+  │       上位机              │
+  │       (后方)              │
+  └──────────────────────────┘
+```
 
 ## 关键配置
 
