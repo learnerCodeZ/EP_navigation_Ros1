@@ -147,7 +147,7 @@ EKF 融合策略（`ekf.yaml`，使用 HI12 外置 IMU）：
 
 **代价地图** (`costmap_common_params.yaml`)：
 
-- 机器人足迹：36cm × 28cm（矩形）
+- 机器人足迹：28cm × 22cm（矩形）
 - 膨胀半径：0.30m
 
 **全局代价地图** (`global_costmap_params.yaml`)：

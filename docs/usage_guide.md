@@ -168,23 +168,36 @@ RVIZ 会自动打开，显示激光扫描和建图过程。用遥控器或键盘
 
 ```bash
 # 键盘控制（另开终端）
-rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+roslaunch rm_ep_driver teleop_keyboard.launch
 ```
+
+键盘布局（麦轮全向控制）：
+
+```
+  u  i  o      前左转 前 前右转
+  j  k  l  =>  左转   停 右转
+  m  ,  .      后左转 后 后右转
+```
+
+空格急停，r 切换速度档位。
 
 建图完成后保存地图：
 
 ```bash
-# 另开终端
-rosrun rm_ep_navigation save_map.sh my_map
+# 另开终端，指定名称
+rosrun rm_ep_navigation save_map.sh 教室
+
+# 不指定名称则用时间自动命名（如 20260621_153045）
+rosrun rm_ep_navigation save_map.sh
 ```
 
-地图文件保存在 `src/rm_ep_navigation/maps/` 下，会生成 `my_map.yaml` 和 `my_map.pgm`。
+地图保存在 `maps/<名称>/` 子文件夹下，如 `maps/教室/教室.yaml` 和 `maps/教室/教室.pgm`。
 
 ### 3.3 导航
 
 ```bash
 roslaunch rm_ep_navigation navigation.launch \
-  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/my_map.yaml
+  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/教室/教室.yaml
 ```
 
 RVIZ 打开后：

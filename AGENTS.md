@@ -21,15 +21,18 @@ roslaunch rm_ep_navigation mapping.launch
 # 启动导航
 roslaunch rm_ep_navigation navigation.launch map_file:=/path/to/map.yaml
 
-# 保存地图
+# 保存地图（不指定名称则用时间自动命名）
 rosrun rm_ep_navigation save_map.sh [地图名称]
+
+# 键盘遥控
+roslaunch rm_ep_driver teleop_keyboard.launch
 ```
 
 ## 包结构与职责
 
 | 包 | 路径 | 语言 | 说明 |
 |---|---|---|---|
-| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`（默认由 HI12 提供），订阅 `/cmd_vel`；含 HI12 驱动节点 |
+| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`（默认由 HI12 提供），订阅 `/cmd_vel`；含 HI12 驱动节点、键盘遥控 |
 | `rm_ep_navigation` | `src/rm_ep_navigation/` | 纯配置 | 建图(gmapping)、导航(AMCL+TEB)、EKF融合（HI12 提供绝对航向） |
 | `rm_ep_description` | `src/rm_ep_description/` | 纯配置 | URDF 模型与 STL 网格，定义 TF 树 |
 | `rplidar_ros` | `src/rplidar_ros/` | C++ (C++11) | RPLIDAR A2 激光雷达驱动，自带 SDK 源码编译 |
@@ -38,6 +41,7 @@ rosrun rm_ep_navigation save_map.sh [地图名称]
 
 - **驱动主节点**: `src/rm_ep_driver/scripts/rm_ep_driver_node.py` (RmEpDriver 类)
 - **HI12 驱动节点**: `src/rm_ep_driver/scripts/hi12_imu_node.py` (读取 HI12 串口，发布 `/imu`)
+- **键盘遥控**: `src/rm_ep_driver/scripts/ep_teleop_keyboard.py` (发布 `/cmd_vel`)
 - **底盘 launch**: `src/rm_ep_driver/launch/rm_ep_chassis_bringup.launch` (新建图/导航流程使用)
 - **旧版底盘 launch**: `src/rm_ep_driver/launch/rm_ep_bringup.launch` (通过 yaml 加载参数)
 - **建图 launch**: `src/rm_ep_navigation/launch/mapping.launch`
@@ -90,7 +94,7 @@ SDK 使用 `is` 比较字符串，必须使用 SDK 常量对象（`rm_conn.CONNE
 - 所有 Python 脚本使用 `#!/usr/bin/env python3`
 - 无测试框架、无 lint 配置、无 CI 流程
 - 构建产物 (`build/`, `devel/`) 已在 `.gitignore` 排除
-- 地图文件保存在 `src/rm_ep_navigation/maps/`
+- 地图文件保存在 `src/rm_ep_navigation/maps/<名称>/` 子文件夹
 - 驱动节点基于 ROS2 移植，坐标映射与 ROS2 完全一致
 
 ## 常见问题

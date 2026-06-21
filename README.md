@@ -186,7 +186,7 @@ roslaunch rm_ep_navigation mapping.launch ep_sn:=YOUR_EP_SN ep_conn_type:=sta
 
 # 通过遥控或键盘控制 EP 遍历环境
 # 地图满意后，另开终端保存:
-rosrun rm_ep_navigation save_map.sh my_map
+rosrun rm_ep_navigation save_map.sh 教室
 ```
 
 建图 launch 参数：
@@ -207,7 +207,7 @@ source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 加载地图并启动导航
 roslaunch rm_ep_navigation navigation.launch \
-  map_file:=/home/你的用户名/EP_navigation_Ros1/src/rm_ep_navigation/maps/my_map.yaml
+  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/教室/教室.yaml
 
 # 在 RVIZ 中使用 "2D Nav Goal" 工具点击目标点即可
 ```
@@ -228,11 +228,13 @@ roslaunch rm_ep_navigation navigation.launch \
 
 ```bash
 # 保存为指定名称
-rosrun rm_ep_navigation save_map.sh 教室地图
+rosrun rm_ep_navigation save_map.sh 教室
 
-# 不指定名称则保存为 my_map
+# 不指定名称则用时间自动命名（如 20260621_153045）
 rosrun rm_ep_navigation save_map.sh
 ```
+
+地图保存在 `maps/<名称>/` 子文件夹下，如 `maps/教室/教室.yaml` 和 `maps/教室/教室.pgm`。
 
 ## 配置调优
 
@@ -268,7 +270,7 @@ max_vel_theta: 1.0   # 最大旋转速度 (rad/s)
 **机器人足迹** (`costmap_common_params.yaml` + `teb_local_planner_params.yaml`)：
 
 ```yaml
-footprint: [[-0.18, -0.14], [-0.18, 0.14], [0.18, 0.14], [0.18, -0.14]]
+footprint: [[-0.14, -0.11], [-0.14, 0.11], [0.14, 0.11], [0.14, -0.11]]
 ```
 
 **障碍物安全距离** (`teb_local_planner_params.yaml`)：
