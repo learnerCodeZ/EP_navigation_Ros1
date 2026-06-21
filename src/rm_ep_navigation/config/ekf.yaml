@@ -1,5 +1,5 @@
 # robot_localization EKF 融合配置
-# 融合 EP 里程计 (/odom) 和 IMU (/imu)，输出 /odometry/filtered
+# 融合 EP 里程计 (/odom) 和 HI12 外置 IMU (/imu)，输出 /odometry/filtered
 
 frequency: 30
 sensor_timeout: 0.1
@@ -30,7 +30,7 @@ odom0_differential: false
 odom0_relative: false
 
 # ========================
-# 输入2: EP IMU /imu
+# 输入2: HI12 外置 IMU /imu（9 轴，含磁力计绝对航向）
 # ========================
 
 imu0: /imu
@@ -43,10 +43,9 @@ imu0_queue_size: 10
 imu0_nodelay: true
 imu0_differential: false
 
-# 【核心参数】
-# 设为 true 后，EKF 会将机器人上电瞬间 IMU 读到的第一个 Yaw 角视为 0 度。
-# 它会自动计算一个偏置，把 odom 坐标系“旋转”到与机器人初始朝向完全重合的方向！
-imu0_relative: true
+# HI12 提供磁力计绝对航向，设为 false 让 EKF 直接使用 IMU 的绝对 Yaw 值
+# 无需像 EP IMU 那样将上电 yaw=0 视为 0 度
+imu0_relative: false
 
 # ========================
 # 过程噪声协方差
@@ -57,7 +56,7 @@ process_noise_covariance:
    0,    0,    0.06, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
    0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
    0,    0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-   0,    0,    0,    0,    0,    0.06, 0,    0,    0,    0,    0,    0,    0,    0,    0,
+   0,    0,    0,    0,    0,    0.03, 0,    0,    0,    0,    0,    0,    0,    0,    0,
    0,    0,    0,    0,    0,    0,    0.25, 0,    0,    0,    0,    0,    0,    0,    0,
    0,    0,    0,    0,    0,    0,    0,    0.25, 0,    0,    0,    0,    0,    0,    0,
    0,    0,    0,    0,    0,    0,    0,    0,    0.5,  0,    0,    0,    0,    0,    0,

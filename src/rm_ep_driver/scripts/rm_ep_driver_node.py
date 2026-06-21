@@ -130,6 +130,7 @@ class RmEpDriver:
         self.twist_to_wheel_speeds = rospy.get_param("~twist_to_wheel_speeds", False)
         self.force_level = rospy.get_param("~force_level", False)
         self.imu_has_orientation = rospy.get_param("~imu_has_orientation", True)
+        self.enable_imu = rospy.get_param("~enable_imu", False)
 
         # 协方差参数
         self.linear_velocity_error = rospy.get_param("~linear_velocity_error", 0.005)
@@ -205,11 +206,12 @@ class RmEpDriver:
         chassis = self.ep_robot.chassis
         freq = max(1, min(50, self.odom_rate))
 
-        # 订阅位置、姿态、速度、IMU、电调数据
+        # 订阅位置、姿态、速度、电调数据
         chassis.sub_position(cs=1, freq=freq, callback=self._position_callback)
         chassis.sub_attitude(freq=freq, callback=self._attitude_callback)
         chassis.sub_velocity(freq=freq, callback=self._velocity_callback)
-        chassis.sub_imu(freq=freq, callback=self._imu_callback)
+        if self.enable_imu:
+            chassis.sub_imu(freq=freq, callback=self._imu_callback)
         chassis.sub_esc(freq=freq, callback=self._esc_callback)
 
         # 发布定时器
@@ -376,34 +378,41 @@ class RmEpDriver:
         """发布状态估计"""
         self.odom_msg.header.stamp = stamp
 
-        if self.imu_has_orientation:
-            self.imu_msg.orientation = self.odom_msg.pose.pose.orientation
+        if self.enable_imu:
+            if self.imu_has_orientation:
+                self.imu_msg.orientation = self.odom_msg.pose.pose.orientation
 
-        # IMU 数据映射
-        if self._imu_data is not None:
-            acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z = self._imu_data
-            acceleration = self.imu_msg.linear_acceleration
-            # 加速度: ax 直接, ay 取反, az 取反
-            acceleration.x = acc_x * G
-            acceleration.y = -acc_y * G
-            acceleration.z = -acc_z * G
+            # IMU 数据映射
+            if self._imu_data is not None:
+                acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z = self._imu_data
+                acceleration = self.imu_msg.linear_acceleration
+                # 加速度: ax 直接, ay 取反, az 取反
+                acceleration.x = acc_x * G
+                acceleration.y = -acc_y * G
+                acceleration.z = -acc_z * G
 
-            angular_speed = self.imu_msg.angular_velocity
-            # 角速度: gx 直接, gy 取反, gz 取反
-            angular_speed.x = math.radians(gyro_x)
-            angular_speed.y = -math.radians(gyro_y)
-            angular_speed.z = -math.radians(gyro_z)
+                angular_speed = self.imu_msg.angular_velocity
+                # 角速度: gx 直接, gy 取反, gz 取反
+                angular_speed.x = math.radians(gyro_x)
+                angular_speed.y = -math.radians(gyro_y)
+                angular_speed.z = -math.radians(gyro_z)
 
-            # odom 的角速度也使用 IMU 的 gyro_z
-            self.odom_msg.twist.twist.angular.z = -math.radians(gyro_z)
+                # odom 的角速度也使用 IMU 的 gyro_z
+                self.odom_msg.twist.twist.angular.z = -math.radians(gyro_z)
 
-        # 发布 odom 和 IMU (带异常处理)
+        # 发布 odom (带异常处理)
         try:
             self.odom_pub.publish(self.odom_msg)
-            self.imu_msg.header.stamp = stamp
-            self.imu_pub.publish(self.imu_msg)
         except Exception:
             pass  # 话题关闭时忽略错误
+
+        # 仅在启用 EP 内置 IMU 时发布 /imu（HI12 模式下由 hi12_imu_node 发布）
+        if self.enable_imu:
+            try:
+                self.imu_msg.header.stamp = stamp
+                self.imu_pub.publish(self.imu_msg)
+            except Exception:
+                pass
 
         # TF 发布已禁用：由 EKF (robot_localization) 统一发布 odom->base_link
         # 避免与 EKF 的 TF 冲突

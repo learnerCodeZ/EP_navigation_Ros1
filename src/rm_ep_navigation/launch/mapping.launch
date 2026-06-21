@@ -10,6 +10,10 @@
   <arg name="lidar_frame" default="laser_link" doc="激光雷达 TF 帧名"/>
   <arg name="serial_port" default="/dev/ttyUSB0" doc="激光雷达串口号"/>
   <arg name="rviz" default="true" doc="是否启动 RVIZ"/>
+  <arg name="use_hi12" default="true" doc="是否使用 HI12 外置 IMU"/>
+  <arg name="hi12_port" default="/dev/hi12_imu" doc="HI12 串口设备"/>
+  <arg name="hi12_baud" default="115200" doc="HI12 波特率"/>
+  <arg name="imu_frame" default="imu_link" doc="IMU TF 帧名"/>
 
   <!-- ========== 1. 机器人模型 (URDF + TF) ========== -->
   <include file="$(find rm_ep_description)/launch/description.launch"/>
@@ -29,20 +33,29 @@
     <arg name="ep_conn_type" value="$(arg ep_conn_type)"/>
     <arg name="ep_ip" value="$(arg ep_ip)"/>
     <arg name="enable_cmd_vel" value="true"/>
+    <arg name="enable_imu" value="$(eval not arg('use_hi12'))"/>
   </include>
 
-  <!-- ========== 4. robot_localization EKF 融合 ========== -->
+  <!-- ========== 4. HI12 外置 IMU 节点 ========== -->
+  <node if="$(arg use_hi12)" name="hi12_imu_node" pkg="rm_ep_driver" type="hi12_imu_node.py" output="screen">
+    <param name="port" value="$(arg hi12_port)"/>
+    <param name="baud" value="$(arg hi12_baud)"/>
+    <param name="frame_id" value="$(arg imu_frame)"/>
+    <param name="publish_rate" value="50"/>
+  </node>
+
+  <!-- ========== 5. robot_localization EKF 融合 ========== -->
   <node name="ekf_localization" pkg="robot_localization" type="ekf_localization_node" output="screen">
     <rosparam file="$(find rm_ep_navigation)/config/ekf.yaml" command="load"/>
   </node>
 
-  <!-- ========== 5. gmapping SLAM ========== -->
+  <!-- ========== 6. gmapping SLAM ========== -->
   <node name="gmapping" pkg="gmapping" type="slam_gmapping" output="screen">
     <rosparam file="$(find rm_ep_navigation)/config/gmapping_params.yaml" command="load"/>
     <remap from="scan" to="/scan"/>
   </node>
 
-  <!-- ========== 6. RVIZ 可视化 ========== -->
+  <!-- ========== 7. RVIZ 可视化 ========== -->
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"
         args="-d $(find rm_ep_navigation)/rviz/mapping_nav.rviz"/>
 </launch>

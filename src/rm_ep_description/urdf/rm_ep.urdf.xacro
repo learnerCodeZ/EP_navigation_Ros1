@@ -68,13 +68,15 @@
     </visual>
   </link>
 
-  <!-- ========== imu_link (底盘中心) ========== -->
+  <!-- ========== imu_link (HI12 外置 IMU，安装于底盘后方偏上) ========== -->
   <link name="imu_link"/>
 
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
-    <origin xyz="0 0 ${chassis_height/2}" rpy="0 0 0"/>
+    <!-- HI12 安装位置: 底盘后方 (-0.08m)，居中 (0m)，底盘顶部偏上 (0.10m)
+         模块 X 轴朝前、Y 轴朝左、Z 轴朝上，与 base_link 对齐，rpy=0 -->
+    <origin xyz="-0.08 0 0.10" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== laser_link (RPLIDAR A2 安装位置) ========== -->
