@@ -2,9 +2,9 @@
 """
 RoboMaster EP 键盘遥控节点
 
-麦轮全向移动控制（以 k 为中心的九宫格）:
+麦轮全向移动控制（以 k 为中心）:
   u  i  o       前左  前  前右
-  j  k  l   =>  左   停  右
+  j  k  l   =>  左转  停  右转
   m  ,  .       后左  后  后右
 
 空格: 急停  r: 切换速度档位
@@ -20,16 +20,16 @@ from geometry_msgs.msg import Twist
 
 # 按键 -> (vx, vy, vz) 映射，麦轮全向控制
 KEY_BINDINGS = {
-    # 九宫格方向
-    'u': ( 1,  1,  0),
+    # 方向 + 旋转
+    'u': ( 1,  0,  1),
     'i': ( 1,  0,  0),
-    'o': ( 1, -1,  0),
-    'j': ( 0,  1,  0),
+    'o': ( 1,  0, -1),
+    'j': ( 0,  0,  1),
     'k': ( 0,  0,  0),
-    'l': ( 0, -1,  0),
-    'm': (-1, -1,  0),
+    'l': ( 0,  0, -1),
+    'm': (-1,  0, -1),
     ',': (-1,  0,  0),
-    '.': (-1,  1,  0),
+    '.': (-1,  0,  1),
 }
 
 SPEED_LEVELS = [
@@ -74,7 +74,7 @@ def main():
     rospy.loginfo("当前档位: %d (%.1f m/s, %.1f m/s, %.1f rad/s)",
                   speed_level, *SPEED_LEVELS[speed_level])
     rospy.loginfo("  u  i  o      前左 前 前右")
-    rospy.loginfo("  j  k  l  =>  左  停 右")
+    rospy.loginfo("  j  k  l  =>  左转 停 右转")
     rospy.loginfo("  m  ,  .      后左 后 后右")
     rospy.loginfo("空格: 急停  r: 换挡")
     rospy.loginfo("=" * 40)
