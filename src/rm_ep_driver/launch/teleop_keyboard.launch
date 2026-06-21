@@ -1,0 +1,8 @@
+<launch>
+  <!-- EP 键盘遥控 -->
+  <arg name="speed_level" default="1" doc="速度档位: 0(低速) / 1(中速) / 2(高速)"/>
+
+  <node name="ep_teleop_keyboard" pkg="rm_ep_driver" type="ep_teleop_keyboard.py" output="screen">
+    <param name="speed_level" value="$(arg speed_level)"/>
+  </node>
+</launch>
