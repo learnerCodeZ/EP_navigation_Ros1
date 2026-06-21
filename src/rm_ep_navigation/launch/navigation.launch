@@ -8,7 +8,7 @@
   <arg name="ep_conn_type" default="rndis" doc="连接模式: ap(WiFi直连) / sta(路由器) / rndis(USB)"/>
   <arg name="ep_ip" default="" doc="EP IP 地址"/>
   <arg name="lidar_frame" default="laser_link" doc="激光雷达 TF 帧名"/>
-  <arg name="serial_port" default="/dev/ttyUSB0" doc="激光雷达串口号"/>
+  <arg name="serial_port" default="/dev/rplidar" doc="激光雷达串口号（udev 固定别名）"/>
   <arg name="map_file" default="$(find rm_ep_navigation)/maps/default_map.yaml" doc="地图文件路径"/>
   <arg name="rviz" default="true" doc="是否启动 RVIZ"/>
   <arg name="use_hi12" default="true" doc="是否使用 HI12 外置 IMU"/>

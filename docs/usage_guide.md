@@ -98,7 +98,23 @@ echo "source ~/EP_navigation_Ros1/devel/setup.bash" >> ~/.bashrc
 > **安装方向**：雷达线缆朝车头安装，0° 扫描方向与 ROS X 轴正方向一致，无需翻转补偿。
 
 ```bash
-ls /dev/ttyUSB0
+ls /dev/ttyUSB*
+```
+
+为确保雷达和 HI12 同时插入时设备号不漂移，需配置 udev 固定别名：
+
+```bash
+# 查看雷达序列号
+udevadm info --name=/dev/ttyUSB0 --attribute-walk | grep serial
+
+# 创建雷达 udev 规则（替换雷达的实际序列号）
+echo 'KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{serial}=="<雷达序列号>", SYMLINK+="rplidar", MODE="0666"' | sudo tee /etc/udev/rules.d/99-rplidar.rules
+
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+# 确认别名存在
+ls -l /dev/rplidar
 ```
 
 如果提示权限不足：

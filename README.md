@@ -215,7 +215,7 @@ rosrun rm_ep_navigation save_map.sh
 | `ep_sn` | `3JKDH3B001891M` | EP 序列号 |
 | `ep_conn_type` | `rndis` | 连接模式：`rndis`(USB) / `ap`(直连) / `sta`(路由器) |
 | `ep_ip` | (空) | EP IP 地址 |
-| `serial_port` | `/dev/ttyUSB0` | 雷达串口号 |
+| `serial_port` | `/dev/rplidar` | 雷达串口（udev 固定别名） |
 | `lidar_frame` | `laser_link` | 激光雷达 TF 帧名 |
 | `rviz` | `true` | 是否启动 RVIZ |
 
@@ -239,7 +239,7 @@ roslaunch rm_ep_navigation navigation.launch \
 | `ep_conn_type` | `rndis` | 连接模式 |
 | `ep_ip` | (空) | EP IP 地址 |
 | `map_file` | `maps/default_map.yaml` | 地图文件路径 |
-| `serial_port` | `/dev/ttyUSB0` | 雷达串口号 |
+| `serial_port` | `/dev/rplidar` | 雷达串口（udev 固定别名） |
 | `lidar_frame` | `laser_link` | 激光雷达 TF 帧名 |
 | `rviz` | `true` | 是否启动 RVIZ |
 
@@ -346,8 +346,8 @@ conn_type_map = {
 ## 硬件连接
 
 1. EP 通过 USB 线连接电脑（RNDIS 模式，默认），或通过 WiFi 连接同一路由器（STA 模式）
-2. RPLIDAR A2 通过 USB 连接电脑，默认串口 `/dev/ttyUSB0`（安装时线缆朝车头，0° 与 ROS X 轴一致）
-3. HI12 外置 IMU 通过 USB-TTL 模块连接电脑，默认 `/dev/hi12_imu`（详见 [HI12 安装方案](docs/hi12_installation_plan.md)）
+2. RPLIDAR A2 通过 USB 连接电脑，固定别名 `/dev/rplidar`（安装时线缆朝车头，0° 与 ROS X 轴一致）
+3. HI12 外置 IMU 通过 USB-TTL 模块连接电脑，固定别名 `/dev/hi12_imu`（详见 [HI12 安装方案](docs/hi12_installation_plan.md)）
 4. 如需指定其他串口，在 launch 中添加 `serial_port:=/dev/ttyUSB1`
 
 ## 常见问题
