@@ -36,6 +36,7 @@ import threading
 import rospy
 import serial
 from sensor_msgs.msg import Imu
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
 # HiPNUC 协议常量
@@ -319,20 +320,29 @@ class HI12ImuDriver:
         msg = self.imu_msg
         msg.header.stamp = rospy.Time.now()
 
-        # 四元数: HI12 输出 [w, x, y, z]，ROS Imu 需要 [x, y, z, w]
-        msg.orientation.x = quat[1]
-        msg.orientation.y = quat[2]
-        msg.orientation.z = quat[3]
-        msg.orientation.w = quat[0]
+        # 四元数: HI12 输出 [w, x, y, z]
+        # HI12 坐标系 Y 轴朝右 (与 ROS REP-103 Y 朝左相反)
+        # 导致 yaw 方向相反，需要取反 yaw
+        w, x, y, z = quat
 
-        # 角速度 (rad/s)
+        # 转欧拉角，取反 yaw，再转回四元数
+        roll, pitch, yaw = euler_from_quaternion([x, y, z, w])
+        yaw = -yaw
+        q_ros = quaternion_from_euler(roll, pitch, yaw)
+
+        msg.orientation.x = q_ros[0]
+        msg.orientation.y = q_ros[1]
+        msg.orientation.z = q_ros[2]
+        msg.orientation.w = q_ros[3]
+
+        # 角速度 (rad/s): gyro_z 取反，匹配翻转后的 yaw 方向
         msg.angular_velocity.x = gyro[0]
         msg.angular_velocity.y = gyro[1]
-        msg.angular_velocity.z = gyro[2]
+        msg.angular_velocity.z = -gyro[2]
 
-        # 线加速度 (m/s^2)
+        # 线加速度 (m/s^2): ay 取反，匹配翻转后的 Y 轴方向
         msg.linear_acceleration.x = accel[0]
-        msg.linear_acceleration.y = accel[1]
+        msg.linear_acceleration.y = -accel[1]
         msg.linear_acceleration.z = accel[2]
 
         self.imu_pub.publish(msg)
