@@ -300,7 +300,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 1.2153980731964111
-      Target Frame: <Fixed Frame>
+      Target Frame: base_link
       Yaw: 3.265397548675537
     Saved: ~
 Window Geometry:

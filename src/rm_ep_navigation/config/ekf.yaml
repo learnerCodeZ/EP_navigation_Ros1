@@ -45,7 +45,7 @@ imu0_differential: false
 
 # HI12 提供磁力计绝对航向，设为 false 让 EKF 直接使用 IMU 的绝对 Yaw 值
 # 无需像 EP IMU 那样将上电 yaw=0 视为 0 度
-imu0_relative: false
+imu0_relative: true
 
 # ========================
 # 过程噪声协方差
