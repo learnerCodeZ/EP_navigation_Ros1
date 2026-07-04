@@ -365,12 +365,12 @@ class RmEpDriver:
         orientation.z = q[2]
         orientation.w = q[3]
 
-        # 速度映射 (世界坐标系)
+        # 速度映射 (体坐标系)
         if vel is not None:
             velocity = self.odom_msg.twist.twist.linear
-            # 使用世界坐标系速度，y 取反
-            velocity.x = vel[0]   # vgx
-            velocity.y = -vel[1]  # -vgy
+            # 使用体坐标系速度 (vbx, vby)，y 取反
+            velocity.x = vel[3]   # vbx (body frame forward)
+            velocity.y = -vel[4]  # -vby (body frame left, negated for ROS)
 
         # 角速度使用 IMU 的 gyro_z (在 _publish_state_estimation 中设置)
 

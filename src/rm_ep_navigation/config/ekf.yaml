@@ -19,9 +19,9 @@ publish_acceleration: false
 # 输入1: EP 里程计 /odom (世界坐标系)
 # ========================
 odom0: /odom
-odom0_config: [true,  true,  false,  # 融合里程计的绝对位置 X, Y
+odom0_config: [false, false, false,  # 不融合绝对位置（EP 世界坐标系与 EKF odom 帧不对齐）
                false, false, false,  # 放弃绝对角度（使用 IMU）
-               true,  true,  false,  # 融合世界坐标系速度 vx, vy
+               true,  true,  false,  # 融合体坐标系速度 vx, vy
                false, false, true,   # 融合角速度 vyaw
                false, false, false]
 odom0_queue_size: 10
