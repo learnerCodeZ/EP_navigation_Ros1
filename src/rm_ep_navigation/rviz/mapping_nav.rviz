@@ -73,7 +73,7 @@ Visualization Manager:
     - Angle Tolerance: 0.1
       Class: rviz/Odometry
       Enabled: true
-      Keep: 1
+      Keep: 100
       Name: Odometry
       Position Tolerance: 0.1
       Topic: /odometry/filtered
