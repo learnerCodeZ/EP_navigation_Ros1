@@ -21,8 +21,8 @@ TebLocalPlannerROS:
   # ========================
   # 目标容忍度
   # ========================
-  xy_goal_tolerance: 0.10      # 目标位置容忍误差 (m)
-  yaw_goal_tolerance: 0.05     # 目标姿态容忍误差 (rad)
+  xy_goal_tolerance: 0.20      # 目标位置容忍误差 (m)，放宽避免到点后反复微调
+  yaw_goal_tolerance: 0.30     # 目标姿态容忍误差 (rad≈17°)，放宽避免调朝向振荡
   free_goal_vel: false         # 到达目标时速度归零
 
   # ========================
@@ -56,9 +56,16 @@ TebLocalPlannerROS:
   # ========================
   # 优化参数
   # ========================
-  no_inner_iterations: 3
-  no_outer_iterations: 3
+  no_inner_iterations: 2       # 内层迭代减到 2（默认 5），降低计算量
+  no_outer_iterations: 2       # 外层迭代减到 2（默认 3），降低计算量
   penalty_epsilon: 0.1
+
+  # ========================
+  # 速度采样 (减少采样降低计算量)
+  # ========================
+  vx_samples: 3                # 前向速度采样数（默认 3）
+  vy_samples: 5                # 横向速度采样数（默认 10），麦轮全向需保留一定采样
+  vth_samples: 10              # 角速度采样数（默认 20），减半
 
   # ========================
   # 权重

@@ -3,7 +3,8 @@
 base_local_planner: teb_local_planner/TebLocalPlannerROS
 
 # 控制器 (局部规划器)
-controller_frequency: 10.0
+# 5Hz 给 TEB 双倍计算时间，避免 control loop 超时（Jetson 算力有限）
+controller_frequency: 5.0
 controller_patience: 3.0
 
 # 规划器 (全局规划器)
