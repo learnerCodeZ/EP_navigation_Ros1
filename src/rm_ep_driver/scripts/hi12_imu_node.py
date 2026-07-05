@@ -104,7 +104,7 @@ class HI12ImuDriver:
         self._read_thread = threading.Thread(target=self._read_loop, daemon=True)
         self._read_thread.start()
 
-        rospy.Timer(rospy.Duration(1.0 / max(1, self.publish_rate)),
+        self._timer = rospy.Timer(rospy.Duration(1.0 / max(1, self.publish_rate)),
                     self._publish_callback)
 
         rospy.loginfo("HI12 IMU 驱动已启动 (port=%s, baud=%d, rate=%d Hz)",
@@ -137,7 +137,7 @@ class HI12ImuDriver:
                     continue
 
                 data = self.ser.read(self.ser.in_waiting or 64)
-                if not data:
+                if not data or not isinstance(data, bytes):
                     continue
 
                 buf.extend(data)
@@ -222,6 +222,8 @@ class HI12ImuDriver:
 
     def _publish_callback(self, event):
         """定时发布 IMU 消息"""
+        if rospy.is_shutdown():
+            return
         with self._lock:
             quat = self._quat
             gyro = self._gyro_rad
@@ -274,11 +276,15 @@ class HI12ImuDriver:
     def shutdown(self):
         rospy.loginfo("HI12 IMU 驱动正在关闭...")
         self._running = False
+        if self._timer is not None:
+            self._timer.shutdown()
         if self.ser is not None:
             try:
                 self.ser.close()
             except Exception:
                 pass
+        if self._read_thread is not None:
+            self._read_thread.join(timeout=0.5)
         rospy.loginfo("HI12 IMU 驱动已关闭")
 
 
