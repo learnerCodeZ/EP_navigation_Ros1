@@ -29,8 +29,8 @@ except ImportError:
 
 
 # 常量定义
-RADIUS = 0.05  # 轮子半径 (m)
-AXIS = 0.2     # 轴距 (m)
+RADIUS = 0.05   # 轮子半径 (m) — 实测直径 10cm
+AXIS = 0.198    # 轴距 (m) — 实测前后轮中心距
 RPM2SPEED = 2 * math.pi * RADIUS / 60
 G = 9.81       # 重力加速度
 
