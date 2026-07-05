@@ -304,7 +304,7 @@ ls /dev/hi12_imu /dev/ttyUSB*
 rostopic echo /imu
 ```
 
-详见 [HI12 安装方案](hi12_installation_plan.md)。
+详见 [HI12 安装方案](hi12_installation_plan.md)。HiPNUC 协议文档下载：https://download.hipnuc.com/products/#attitude
 
 ### TF 树异常
 

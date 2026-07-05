@@ -158,7 +158,7 @@ roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=sta
 | `hi12_baud` | `115200` | HI12 波特率 |
 | `use_hi12` | `true` | 是否使用 HI12（false 则切回 EP 内置 IMU） |
 
-更多安装和配置细节见：[HI12 安装方案](docs/hi12_installation_plan.md)。
+更多安装和配置细节见：[HI12 安装方案](docs/hi12_installation_plan.md)。HiPNUC 协议文档下载：https://download.hipnuc.com/products/#attitude
 
 ```bash
 # 切回 EP 内置 IMU
