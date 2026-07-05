@@ -176,7 +176,64 @@ sudo usermod -a -G dialout $USER
 - [ ] HI12 的 USB-TTL 已连接
 - [ ] 已执行 `source ~/EP_navigation_Ros1/devel/setup.bash`
 
-### 3.2 建图
+### 3.2 启动说明
+
+`mapping.launch`（建图）和 `navigation.launch`（导航）一条命令即可启动所有必要节点：
+
+| 节点 | 说明 |
+|------|------|
+| robot_state_publisher | URDF 模型 + TF |
+| rplidarNode | 激光雷达 |
+| rm_ep_chassis_driver | 底盘驱动 |
+| hi12_imu_node | 外置 IMU |
+| ekf_localization | EKF 融合 |
+| gmapping（建图） | SLAM 建图 |
+| amcl（导航） | AMCL 定位 |
+| move_base（导航） | TEB 导航规划 |
+| rviz | 可视化 |
+
+无需手动逐个启动。
+
+### 3.4 底盘控制
+
+启动底盘驱动（USB 模式，默认）：
+
+```bash
+roslaunch rm_ep_driver rm_ep_chassis_bringup.launch
+```
+
+**指定连接模式：**
+
+```bash
+# 指定 SN
+roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_sn:=3JKDH3B001891M
+
+# WiFi 直连模式
+roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=ap
+
+# 路由器模式
+roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=sta
+```
+
+**键盘遥控（另开终端）：**
+
+```bash
+roslaunch rm_ep_driver teleop_keyboard.launch
+```
+
+键盘布局（麦轮全向控制）：
+
+```
+  u  i  o      前左转 前 前右转
+  j  k  l  =>  左转   停 右转
+  m  ,  .      后左转 后 后右转
+```
+
+空格急停，r 切换速度档位。
+
+> **注意**：建图和导航模式会自动启动底盘驱动，无需先手动执行本节命令。单独启动底盘驱动通常用于调试或测试。
+
+### 3.5 建图
 
 ```bash
 roslaunch rm_ep_navigation mapping.launch
@@ -211,7 +268,7 @@ rosrun rm_ep_navigation save_map.sh
 
 地图保存在 `maps/<名称>/` 子文件夹下，如 `maps/教室/教室.yaml` 和 `maps/教室/教室.pgm`。
 
-### 3.3 导航
+### 3.6 导航
 
 ```bash
 roslaunch rm_ep_navigation navigation.launch \
