@@ -255,6 +255,20 @@ rosrun rm_ep_navigation save_map.sh
 
 地图保存在 `maps/<名称>/` 子文件夹下，如 `maps/教室/教室.yaml` 和 `maps/教室/教室.pgm`。
 
+### 查看已有地图
+
+```bash
+# 列出所有已保存的地图（每个子文件夹即一张地图）
+ls ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/
+```
+
+导航时把对应文件夹名填入 `map_file` 参数即可加载，例如：
+
+```bash
+roslaunch rm_ep_navigation navigation.launch \
+  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/教室/教室.yaml
+```
+
 ## 配置调优
 
 所有参数配置文件位于 `rm_ep_navigation/config/`：
