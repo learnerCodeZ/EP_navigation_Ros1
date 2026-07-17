@@ -38,7 +38,8 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/LaserScan
-      Color Transformer: AxisColor
+      Color: 0; 255; 255
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -50,7 +51,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (m): 0.01
+      Size (m): 0.03
       Size (Pixels): 3
       Style: Flat Squares
       Topic: /scan
