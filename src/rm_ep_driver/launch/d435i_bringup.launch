@@ -1,14 +1,14 @@
 <launch>
-  <!-- D435i 独立启动 - 像键盘遥控一样单独运行 -->
-  <arg name="enable_depth_to_laser" default="true" doc="是否启动深度转激光扫描"/>
-  <arg name="rviz" default="false" doc="是否启动独立 RVIZ 查看 D435i 画面"/>
+  <!-- D435i standalone launch - like teleop_keyboard -->
+  <arg name="enable_depth_to_laser" default="true" doc="enable depth to laser scan"/>
+  <arg name="rviz" default="false" doc="start independent RVIZ for D435i"/>
 
-  <!-- D435i 驱动 -->
+  <!-- D435i driver -->
   <include file="$(find rm_ep_driver)/launch/realsense_d435i.launch"/>
 
-  <!-- 深度转 LaserScan（可选） -->
+  <!-- depth to LaserScan (optional) -->
   <include if="$(arg enable_depth_to_laser)" file="$(find rm_ep_driver)/launch/d435i_depth_to_laser.launch"/>
 
-  <!-- 独立 RVIZ（可选，用于单独调试 D435i） -->
+  <!-- independent RVIZ (optional, for debugging D435i) -->
   <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz" args="-f d435i_link"/>
 </launch>
