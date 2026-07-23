@@ -17,6 +17,7 @@
   <arg name="hi12_baud" default="115200" doc="HI12 波特率"/>
   <arg name="imu_frame" default="imu_link" doc="IMU TF 帧名"/>
   <arg name="cmd_vel_topic" default="cmd_vel" doc="move_base 速度输出话题；经 twist_mux 时传 cmd_vel_raw（默认 cmd_vel 向后兼容，单独跑 navigation.launch 不受影响）"/>
+  <arg name="use_d435i" default="false" doc="是否启动 RealSense D435i 深度相机"/>
 
   <!-- ========== 1. 机器人模型 (URDF + TF) ========== -->
   <include file="$(find rm_ep_description)/launch/description.launch"/>
@@ -77,6 +78,9 @@
     <remap from="scan" to="/scan"/>
     <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
   </node>
+
+  <!-- ========== D435i 深度相机（可选） ========== -->
+  <include if="$(arg use_d435i)" file="$(find rm_ep_driver)/launch/d435i_bringup.launch"/>
 
   <!-- ========== 9. RVIZ 可视化 ========== -->
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"

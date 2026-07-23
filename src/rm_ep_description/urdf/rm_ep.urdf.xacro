@@ -96,6 +96,20 @@
     <origin xyz="${laser_x} 0 ${chassis_height/2 + laser_z}" rpy="0 0 0"/>
   </joint>
 
+  <!-- ========== d435i_link (Intel RealSense D435i) ========== -->
+  <!-- 安装位置: 底盘顶部前方，激光雷达后方 -->
+  <xacro:property name="d435i_x" value="0.05"/>
+  <xacro:property name="d435i_y" value="0.0"/>
+  <xacro:property name="d435i_z" value="0.12"/>
+
+  <link name="d435i_link"/>
+
+  <joint name="d435i_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="d435i_link"/>
+    <origin xyz="${d435i_x} ${d435i_y} ${d435i_z}" rpy="0 0 0"/>
+  </joint>
+
   <!-- ========== 四个麦克纳姆轮 ========== -->
   <xacro:property name="pos_z" value="${-chassis_height/2 + wheel_radius + chassis_clearance}"/>
 

@@ -1,0 +1,30 @@
+<launch>
+  <!-- RealSense D435i 驱动节点封装 -->
+  <arg name="camera_name" default="camera" doc="realsense 相机命名空间"/>
+  <arg name="serial_no" default="" doc="D435i 序列号（留空自动检测）"/>
+  <arg name="depth_width" default="640" doc="深度图宽度"/>
+  <arg name="depth_height" default="480" doc="深度图高度"/>
+  <arg name="depth_fps" default="30" doc="深度帧率"/>
+  <arg name="color_width" default="640" doc="RGB 宽度"/>
+  <arg name="color_height" default="480" doc="RGB 高度"/>
+  <arg name="color_fps" default="30" doc="RGB 帧率"/>
+  <arg name="enable_imu" default="true" doc="发布 D435i IMU 数据（供 RTAB-Map 用）"/>
+  <arg name="align_depth" default="true" doc="对齐深度到彩色（用于 RTAB-Map）"/>
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no" value="$(arg serial_no)"/>
+    <arg name="camera_name" value="$(arg camera_name)"/>
+    <arg name="depth_width" value="$(arg depth_width)"/>
+    <arg name="depth_height" value="$(arg depth_height)"/>
+    <arg name="depth_fps" value="$(arg depth_fps)"/>
+    <arg name="color_width" value="$(arg color_width)"/>
+    <arg name="color_height" value="$(arg color_height)"/>
+    <arg name="color_fps" value="$(arg color_fps)"/>
+    <arg name="enable_imu" value="$(arg enable_imu)"/>
+    <arg name="align_depth" value="$(arg align_depth)"/>
+    <arg name="enable_depth" value="true"/>
+    <arg name="enable_color" value="true"/>
+    <arg name="enable_infra1" value="false"/>
+    <arg name="enable_infra2" value="false"/>
+  </include>
+</launch>

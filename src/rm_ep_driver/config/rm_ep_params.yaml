@@ -23,3 +23,12 @@ enable_imu: false
 # HI12 外置 IMU 参数
 hi12_port: "/dev/hi12_imu" # HI12 串口设备
 hi12_baud: 115200          # HI12 波特率
+
+# RealSense D435i 参数
+d435i_camera_name: "camera"     # realsense 相机命名空间
+d435i_depth_width: 640
+d435i_depth_height: 480
+d435i_depth_fps: 30
+d435i_color_width: 640
+d435i_color_height: 480
+d435i_color_fps: 30
