@@ -1,4 +1,4 @@
 <launch>
-  <!-- RealSense D435i driver - minimal config, compatible with 2.3.2 -->
-  <node name="realsense_camera" pkg="realsense2_camera" type="realsense2_camera_node" output="screen"/>
+  <!-- RealSense D435i driver - use rs_camera.launch with no args -->
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
 </launch>
