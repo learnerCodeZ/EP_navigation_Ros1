@@ -1,20 +1,14 @@
 <launch>
-  <!-- D435i ç‹¬ç«‹å¯åŠ¨ - åƒé”®ç›˜é¥æŽ§ä¸€æ ·å•ç‹¬è¿è¡Œ -->
-  <arg name="camera_namespace" default="camera" doc="realsense ç›¸æœºå‘½åç©ºé—´"/>
-  <arg name="enable_depth_to_laser" default="true" doc="æ˜¯å¦å¯åŠ¨æ·±åº¦è½¬æ¿€å…‰æ‰«æ"/>
-  <arg name="rviz" default="false" doc="æ˜¯å¦å¯åŠ¨ç‹¬ç«‹ RVIZ æŸ¥çœ‹ D435i ç”»é¢"/>
+  <!-- D435i ¶ÀÁ¢Æô¶¯ - Ïñ¼üÅÌÒ£¿ØÒ»Ñùµ¥¶ÀÔËÐÐ -->
+  <arg name="enable_depth_to_laser" default="true" doc="ÊÇ·ñÆô¶¯Éî¶È×ª¼¤¹âÉ¨Ãè"/>
+  <arg name="rviz" default="false" doc="ÊÇ·ñÆô¶¯¶ÀÁ¢ RVIZ ²é¿´ D435i »­Ãæ"/>
 
-  <!-- D435i é©±åŠ¨ -->
-  <include file="$(find rm_ep_driver)/launch/realsense_d435i.launch">
-    <arg name="camera_namespace" value="$(arg camera_namespace)"/>
-  </include>
+  <!-- D435i Çý¶¯ -->
+  <include file="$(find rm_ep_driver)/launch/realsense_d435i.launch"/>
 
-  <!-- æ·±åº¦è½¬ LaserScanï¼ˆå¯é€‰ï¼‰ -->
-  <include if="$(arg enable_depth_to_laser)" file="$(find rm_ep_driver)/launch/d435i_depth_to_laser.launch">
-    <arg name="camera_name" value="$(arg camera_namespace)"/>
-  </include>
+  <!-- Éî¶È×ª LaserScan£¨¿ÉÑ¡£© -->
+  <include if="$(arg enable_depth_to_laser)" file="$(find rm_ep_driver)/launch/d435i_depth_to_laser.launch"/>
 
-  <!-- ç‹¬ç«‹ RVIZï¼ˆå¯é€‰ï¼Œç”¨äºŽå•ç‹¬è°ƒè¯• D435iï¼‰ -->
-  <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz"
-        args="-f d435i_link"/>
+  <!-- ¶ÀÁ¢ RVIZ£¨¿ÉÑ¡£¬ÓÃÓÚµ¥¶Àµ÷ÊÔ D435i£© -->
+  <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz" args="-f d435i_link"/>
 </launch>

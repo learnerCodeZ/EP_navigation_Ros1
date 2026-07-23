@@ -1,16 +1,5 @@
 <launch>
-  <!-- RealSense D435i é©±åŠ¨èŠ‚ç‚¹å°è£… -->
-  <!-- ç®€åŒ–ç‰ˆï¼šå…¼å®¹ realsense2_camera 2.3.2 (ROS Noetic) -->
-
-  <arg name="serial_no" default="" doc="D435i åºåˆ—å·ï¼ˆç•™ç©ºè‡ªåŠ¨æ£€æµ‹ï¼‰"/>
-  <arg name="camera_namespace" default="camera" doc="realsense ç›¸æœºå‘½åç©ºé—´"/>
-
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <arg name="serial_no" value="$(arg serial_no)"/>
-    <arg name="camera_namespace" value="$(arg camera_namespace)"/>
-    <arg name="enable_depth" value="true"/>
-    <arg name="enable_color" value="true"/>
-    <arg name="enable_infra1" value="false"/>
-    <arg name="enable_infra2" value="false"/>
-  </include>
+  <!-- RealSense D435i Çý¶¯ - ×î¼òÅäÖÃ£¬¼æÈÝ 2.3.2 -->
+  <!-- ²»´«²ÎÊý¸ø rs_camera.launch£¬ÈÃËüÓÃÄ¬ÈÏÅäÖÃ×Ô¶¯¼ì²â D435i -->
+  <node name="realsense_camera" pkg="realsense2_camera" type="realsense2_camera_node" output="screen"/>
 </launch>
