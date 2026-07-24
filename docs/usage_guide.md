@@ -395,7 +395,7 @@ xdg-open frames.pdf
 ```
 map ──(amcl/gmapping)──► odom ──(EKF)──► base_link ──┬── laser_link
                                                       ├── imu_link
-                                                      ├── chassis_base_link
+                                                      ├── camera_link ──► d435i_link (RealSense D435i, 可选)
                                                       └── wheels (4个麦轮)
 ```
 

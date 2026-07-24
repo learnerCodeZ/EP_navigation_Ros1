@@ -68,8 +68,8 @@ move_base / teleop → /cmd_vel → 驱动节点 → SDK drive_speed
 ```
 map ──(gmapping/amcl)──► odom ──(EKF)──► base_link ──(URDF)──► laser_link
                                                                   ├── imu_link
-                                                                  ├── chassis_base_link
-                                                                  │   └── arm → camera
+                                                                  ├── camera_link
+                                                                  │   └── d435i_link (D435i, 可选)
                                                                   └── wheels (4个麦轮)
 ```
 
@@ -85,6 +85,7 @@ base_link 原点在底盘几何中心，前方 +X，左方 +Y，上方 +Z。
 |------|--------------------------|-----------|
 | RPLIDAR A2 | 最前方，宽度居中，底盘顶部，线缆朝前 | x=0.11, y=0, z=0.15 |
 | HI12 IMU | 长度中间，右侧偏 6cm，底盘顶部 | x=0, y=-0.06, z=0.10 |
+| D435i (可选) | 底盘顶部前方，激光雷达后方，镜头朝前 | x=0.05, y=0, z=0.12 |
 
 ```
              EP 顶部俯视图

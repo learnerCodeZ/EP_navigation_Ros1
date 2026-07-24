@@ -39,8 +39,8 @@ URDF/XACRO 模型，定义 TF 树：
 ```
 map ──(gmapping/amcl)──► odom ──(EKF)──► base_link ──┬── laser_link
                                                       ├── imu_link
-                                                      ├── chassis_base_link
-                                                      │   └── arm → camera
+                                                      ├── camera_link
+                                                      │   └── d435i_link (RealSense D435i, 可选)
                                                       └── wheels (4个麦轮)
 ```
 
@@ -164,6 +164,23 @@ roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=sta
 # 切回 EP 内置 IMU
 roslaunch rm_ep_navigation mapping.launch use_hi12:=false enable_imu:=true
 ```
+
+### D435i 深度相机（可选）
+
+RealSense D435i（RGB + 深度 + IMU）作为可选感知扩展。**必须直连上位机的 USB 3.0 口**——不能插 EP 底盘的 Type-C 口（那个连底盘主控板，数据到不了上位机）。默认 `use_d435i:=false`，不启用时与建图/导航完全无关。
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `use_d435i` | `false` | 建图/导航 launch 内嵌启动 D435i |
+
+```bash
+# 建图附带 D435i
+roslaunch rm_ep_navigation mapping.launch use_d435i:=true
+# 导航附带 D435i
+roslaunch rm_ep_navigation navigation.launch use_d435i:=true map_file:=...
+```
+
+> ⚠️ D435i 需 **USB 3.0 口**（蓝色）。插 USB 2.0 口会导致 RGB 不可用、设备反复掉线。
 
 ### EP 连接模式
 

@@ -96,18 +96,30 @@
     <origin xyz="${laser_x} 0 ${chassis_height/2 + laser_z}" rpy="0 0 0"/>
   </joint>
 
-  <!-- ========== d435i_link (Intel RealSense D435i) ========== -->
+  <!-- ========== D435i (Intel RealSense D435i) ========== -->
   <!-- 安装位置: 底盘顶部前方，激光雷达后方 -->
   <xacro:property name="d435i_x" value="0.05"/>
   <xacro:property name="d435i_y" value="0.0"/>
   <xacro:property name="d435i_z" value="0.12"/>
 
+  <!-- camera_link: realsense2_camera 发布的 TF 子树根 (camera_link→camera_depth_frame→...)
+       驱动只发 camera_link 往下的子变换，不发 camera_link 的父变换，
+       所以这里由 URDF 把它挂到 base_link 上，二者接力、不冲突。 -->
+  <link name="camera_link"/>
+
+  <joint name="camera_link_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${d435i_x} ${d435i_y} ${d435i_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- d435i_link: 语义别名, 挂在 camera_link 下, 给 depth_to_laserscan 的 output_frame_id 用 -->
   <link name="d435i_link"/>
 
-  <joint name="d435i_joint" type="fixed">
-    <parent link="base_link"/>
+  <joint name="d435i_link_joint" type="fixed">
+    <parent link="camera_link"/>
     <child link="d435i_link"/>
-    <origin xyz="${d435i_x} ${d435i_y} ${d435i_z}" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== 四个麦克纳姆轮 ========== -->
