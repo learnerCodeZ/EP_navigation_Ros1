@@ -167,20 +167,36 @@ roslaunch rm_ep_navigation mapping.launch use_hi12:=false enable_imu:=true
 
 ### D435i 深度相机（可选）
 
-RealSense D435i（RGB + 深度 + IMU）作为可选感知扩展。**必须直连上位机的 USB 3.0 口**——不能插 EP 底盘的 Type-C 口（那个连底盘主控板，数据到不了上位机）。默认 `use_d435i:=false`，不启用时与建图/导航完全无关。
+RealSense D435i（RGB + 深度 + IMU）作为可选感知扩展。默认 `use_d435i:=false`，不启用时与建图/导航完全无关。
+
+**硬件接线（关键）**：
+- D435i **必须直连上位机的 USB 口**，不能插 EP 底盘的 Type-C 口（那个口连底盘主控板，数据到不了上位机；底盘是封闭固件，无法转发 USB 设备）
+- 必须接 **USB 3.0 口**（蓝色）；USB 2.0 下 RGB 不可用、设备反复掉线
+
+**验证 USB 3.0**（接好后）：
+```bash
+lsusb -t | grep -A1 5000M     # D435i 应在 5000M 链路（USB 2.0 是 480M）
+lsusb | grep 8086             # 应为 8086:0b3a（USB 3.0 模式 PID；USB 2.0 是 0ad6）
+```
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `use_d435i` | `false` | 建图/导航 launch 内嵌启动 D435i |
 
 ```bash
-# 建图附带 D435i
+# 建图/导航附带 D435i
 roslaunch rm_ep_navigation mapping.launch use_d435i:=true
-# 导航附带 D435i
 roslaunch rm_ep_navigation navigation.launch use_d435i:=true map_file:=...
+
+# 独立调试 D435i（自动起 URDF + 驱动 + RViz，配置好看 scan）
+roslaunch rm_ep_driver d435i_bringup.launch
 ```
 
-> ⚠️ D435i 需 **USB 3.0 口**（蓝色）。插 USB 2.0 口会导致 RGB 不可用、设备反复掉线。
+D435i 的深度可转 LaserScan（`/d435i/scan`），作为前方约 86° 的补充感知。
+
+> 📷 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（轻量）；RViz 主要看 `/d435i/scan` 点云（Jetson 上 RViz 渲染实时图像会卡）。
+
+更详细的故障排查见 [docs/details.md](docs/details.md)。
 
 ### EP 连接模式
 

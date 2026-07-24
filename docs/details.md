@@ -316,6 +316,29 @@ rosrun tf view_frames
 rosrun tf tf_echo odom base_link
 ```
 
+### D435i 深度相机问题
+
+**D435i 不被识别 / `No RealSense devices found`**：
+- 确认 D435i 插在**上位机的 USB 口**，不是 EP 底盘的 Type-C 口（底盘口连底盘主控板，上位机看不到；底盘是封闭固件，也无法转发 USB 设备）
+- 确认是 **USB 3.0 数据线**（USB-A 头蓝色 + 9 触点；很多 USB-C 线其实是 USB 2.0 充电线，只有 4 触点，换口也没用）
+
+**识别了但 RGB 不可用 / `Color sensor isn't supported` / 设备反复掉线**（典型 USB 2.0 症状）：
+```bash
+lsusb -t                        # D435i 若在 480M（不是 5000M）= USB 2.0
+lsusb | grep 8086               # PID 0ad6 = USB 2.0 模式（正常 USB 3.0 是 0b3a）
+```
+解决：换 USB 3.0 口 + USB 3.0 线，直到 `lsusb -t` 里 D435i 是 5000M。
+
+**验证 D435i 正常工作**：
+```bash
+roslaunch rm_ep_driver d435i_bringup.launch
+# 日志应: Device Name "Intel RealSense D435I"（不是 "USB2"）+ RGB camera was found + 不掉线
+rostopic hz /camera/color/image_raw    # ~30Hz
+rostopic hz /d435i/scan                 # ~30Hz
+```
+
+**RViz 里 RGB 黑 / No image**：Jetson 上 RViz 渲染实时图像易卡/黑，建议用 `rqt_image_view /camera/color/image_raw` 看画面，RViz 只看 `/d435i/scan` 点云。
+
 ## 待优化项
 
 > 记录于 2026-07-06，项目核心功能已完成（建图+导航可实车运行），以下为后续可选打磨方向。
