@@ -6,16 +6,6 @@ Panels:
       Expanded: []
       Splitter Ratio: 0.5
     Tree Height: 555
-  - Class: rviz/Image
-    Enabled: true
-    Image Rendering: background
-    Image Topic: /camera/color/image_raw
-    Max Value: 1
-    Median window: 5
-    Min Value: 0
-    Name: Image
-    Normalize Range: true
-    Value: true
 Visualization Manager:
   Class: ""
   Displays:
@@ -82,6 +72,15 @@ Visualization Manager:
       Topic: /scan
       Use rainbow: true
       Value: false
+    - Class: rviz/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: RGB (/camera/color/image_raw)
+      Normalize Range: true
+      Topic: /camera/color/image_raw
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -123,8 +122,6 @@ Window Geometry:
   Height: 846
   Hide Left Dock: false
   Hide Right Dock: false
-  Image:
-    collapsed: false
   Width: 1280
   X: 100
   Y: 100
