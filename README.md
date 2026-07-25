@@ -10,7 +10,7 @@
 EP_navigation_Ros1/
 └── src/
     ├── rplidar_ros/              思岚 RPLIDAR A2 激光雷达驱动
-    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动
+    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动 + D435i 深度相机
     ├── rm_ep_description/        EP 机器人 URDF 模型
     └── rm_ep_navigation/         建图与导航配置包
 ```
@@ -75,6 +75,9 @@ ros-noetic-robot-state-publisher
 ros-noetic-joint-state-publisher-gui
 ros-noetic-robot-localization
 ros-noetic-teb-local-planner
+# D435i 深度相机（可选；不用 D435i 可不装）
+ros-noetic-realsense2-camera
+ros-noetic-depthimage-to-laserscan
 ```
 
 ### Python 依赖
@@ -96,7 +99,9 @@ sudo apt install -y \
   ros-noetic-robot-state-publisher \
   ros-noetic-joint-state-publisher-gui \
   ros-noetic-robot-localization \
-  ros-noetic-teb-local-planner
+  ros-noetic-teb-local-planner \
+  ros-noetic-realsense2-camera \
+  ros-noetic-depthimage-to-laserscan
 ```
 
 ### 2. 安装 Python SDK

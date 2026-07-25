@@ -32,7 +32,7 @@ roslaunch rm_ep_driver teleop_keyboard.launch
 
 | 包 | 路径 | 语言 | 说明 |
 |---|---|---|---|
-| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`（默认由 HI12 提供），订阅 `/cmd_vel`；含 HI12 驱动节点、键盘遥控 |
+| `rm_ep_driver` | `src/rm_ep_driver/` | Python 3.8+ | EP 底盘驱动，发布 `/odom`、`/imu`（默认由 HI12 提供），订阅 `/cmd_vel`；含 HI12 驱动节点、键盘遥控、D435i 深度相机 launch |
 | `rm_ep_navigation` | `src/rm_ep_navigation/` | 纯配置 | 建图(gmapping)、导航(AMCL+TEB)、EKF融合（HI12 提供绝对航向） |
 | `rm_ep_description` | `src/rm_ep_description/` | 纯配置 | URDF 模型与 STL 网格，定义 TF 树 |
 | `rplidar_ros` | `src/rplidar_ros/` | C++ (C++11) | RPLIDAR A2 激光雷达驱动，自带 SDK 源码编译 |
@@ -44,6 +44,7 @@ roslaunch rm_ep_driver teleop_keyboard.launch
 - **键盘遥控**: `src/rm_ep_driver/scripts/ep_teleop_keyboard.py` (发布 `/cmd_vel`)
 - **底盘 launch**: `src/rm_ep_driver/launch/rm_ep_chassis_bringup.launch` (新建图/导航流程使用)
 - **旧版底盘 launch**: `src/rm_ep_driver/launch/rm_ep_bringup.launch` (通过 yaml 加载参数)
+- **D435i 调试 launch**: `src/rm_ep_driver/launch/d435i_bringup.launch`（独立调试 D435i，自动起 URDF+驱动+RViz）
 - **建图 launch**: `src/rm_ep_navigation/launch/mapping.launch`
 - **导航 launch**: `src/rm_ep_navigation/launch/navigation.launch`
 
@@ -61,6 +62,7 @@ roslaunch rm_ep_driver teleop_keyboard.launch
 - DJI RoboMaster EP（需安装 `pip3 install robomaster`）
 - RPLIDAR A2 激光雷达（串口 `/dev/ttyUSB0`，波特率 256000）
 - HiPNUC HI12 AHRS 外置 IMU（通过 USB-TTL 连接，默认 `/dev/hi12_imu`，详见 `docs/hi12_installation_plan.md`）
+- Intel RealSense D435i 深度相机（可选；需 USB 3.0 + `ros-noetic-realsense2-camera`，详见 README 的 D435i 小节）
 - EP 连接模式：`rndis`(USB，默认) / `ap`(WiFi直连) / `sta`(路由器)
 
 ## TF 树结构
