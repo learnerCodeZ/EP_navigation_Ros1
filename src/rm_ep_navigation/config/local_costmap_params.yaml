@@ -12,6 +12,18 @@ local_costmap:
   resolution: 0.05
   transform_tolerance: 0.5
 
+  # 障碍源: RPLIDAR (/scan) + D435i (/d435i/scan)
+  # 覆盖 costmap_common_params 的 observation_sources(只 local_costmap 生效;
+  # global_costmap 仍用 common 的 scan-only,不受影响)
+  observation_sources: scan d435i_scan
+  d435i_scan:
+    data_type: LaserScan
+    topic: /d435i/scan
+    marking: true
+    clearing: true
+    obstacle_range: 3.0      # D435i 测距上限 ~3m
+    raytrace_range: 3.5
+
   # 插件
   plugins:
     - {name: obstacles,        type: "costmap_2d::VoxelLayer"}
