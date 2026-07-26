@@ -1,6 +1,9 @@
 <launch>
-  <!-- RealSense D435i driver - use rs_camera.launch with no args -->
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
+  <!-- RealSense D435i driver - 降低 RGB 分辨率以避免 USB 带宽溢出 -->
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="color_width" value="640"/>
+    <arg name="color_height" value="480"/>
+  </include>
 
   <!-- Enable pointcloud output (runs after camera node initializes) -->
   <node name="d435i_enable_pointcloud" pkg="rm_ep_driver" type="enable_pointcloud.py"
