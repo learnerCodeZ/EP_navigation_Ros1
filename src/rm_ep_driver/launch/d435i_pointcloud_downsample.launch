@@ -7,10 +7,10 @@
   <!-- Nodelet manager -->
   <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen"/>
 
-  <!-- VoxelGrid filter nodelet -->
+  <!-- VoxelGrid filter nodelet (remap without ~ prefix for nodelets) -->
   <node pkg="nodelet" type="nodelet" name="d435i_voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
-    <remap from="~input" to="$(arg input_topic)"/>
-    <remap from="~output" to="$(arg output_topic)"/>
+    <remap from="input" to="$(arg input_topic)"/>
+    <remap from="output" to="$(arg output_topic)"/>
     <param name="leaf_size" value="$(arg voxel_size)"/>
     <param name="filter_field_name" value="z"/>
     <param name="filter_limit_min" value="0.1"/>
