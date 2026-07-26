@@ -1,8 +1,9 @@
 <launch>
+  <!-- Pre-set pointcloud parameter before camera starts -->
+  <rosparam>
+    /camera/realsense2_camera/enable_pointcloud: true
+  </rosparam>
+
   <!-- RealSense D435i driver -->
   <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
-
-  <!-- Enable pointcloud output via shell script -->
-  <node name="d435i_enable_pointcloud" pkg="rm_ep_driver" type="enable_pointcloud.sh"
-        output="screen" required="false"/>
 </launch>
