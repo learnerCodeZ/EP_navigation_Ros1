@@ -2,7 +2,6 @@
   <!-- D435i standalone launch -->
   <arg name="enable_depth_to_laser" default="true"/>
   <arg name="enable_pointcloud" default="true"/>
-  <arg name="voxel_size" default="0.05"/>
   <arg name="use_description" default="true"/>
   <arg name="rviz" default="true"/>
 
@@ -10,13 +9,7 @@
   <include file="$(find rm_ep_driver)/launch/realsense_d435i.launch"/>
   <include if="$(arg enable_depth_to_laser)" file="$(find rm_ep_driver)/launch/d435i_depth_to_laser.launch"/>
 
-  <!-- 3D pointcloud: depth image -> PointCloud2 (works without realsense pointcloud) -->
   <include if="$(arg enable_pointcloud)" file="$(find rm_ep_driver)/launch/d435i_depth_to_pointcloud.launch"/>
-
-  <!-- VoxelGrid downsampling -->
-  <include if="$(arg enable_pointcloud)" file="$(find rm_ep_driver)/launch/d435i_pointcloud_downsample.launch">
-    <arg name="voxel_size" value="$(arg voxel_size)"/>
-  </include>
 
   <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz"
         args="-d $(find rm_ep_driver)/rviz/d435i_debug.rviz"/>
