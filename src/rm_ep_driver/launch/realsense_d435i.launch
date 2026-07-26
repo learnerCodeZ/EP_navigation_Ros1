@@ -1,8 +1,4 @@
 <launch>
   <!-- RealSense D435i driver -->
   <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
-
-  <!-- Enable pointcloud via rosparam set (needs camera node to restart) -->
-  <node name="d435i_enable_pointcloud" pkg="rm_ep_driver" type="enable_pointcloud.py"
-        output="screen" required="false"/>
 </launch>
