@@ -1,0 +1,4 @@
+<launch>
+  <!-- Convert depth image to PointCloud2 (alternative to realsense pointcloud) -->
+  <node name="depth_to_pointcloud" pkg="rm_ep_driver" type="depth_to_pointcloud.py" output="screen"/>
+</launch>
