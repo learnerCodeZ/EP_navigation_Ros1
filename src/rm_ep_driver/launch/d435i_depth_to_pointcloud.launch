@@ -1,4 +1,14 @@
 <launch>
-  <!-- Convert depth image to PointCloud2 (alternative to realsense pointcloud) -->
-  <node name="depth_to_pointcloud" pkg="rm_ep_driver" type="depth_to_pointcloud.py" output="screen"/>
+  <!-- Convert depth image to PointCloud2 with downsampling -->
+  <arg name="voxel_size" default="0.05" doc="voxel grid size (meters)"/>
+  <arg name="skip_frames" default="2" doc="publish every N frames"/>
+  <arg name="min_depth" default="0.1" doc="min depth (meters)"/>
+  <arg name="max_depth" default="5.0" doc="max depth (meters)"/>
+
+  <node name="depth_to_pointcloud" pkg="rm_ep_driver" type="depth_to_pointcloud.py" output="screen">
+    <param name="voxel_size" value="$(arg voxel_size)"/>
+    <param name="skip_frames" value="$(arg skip_frames)"/>
+    <param name="min_depth" value="$(arg min_depth)"/>
+    <param name="max_depth" value="$(arg max_depth)"/>
+  </node>
 </launch>
