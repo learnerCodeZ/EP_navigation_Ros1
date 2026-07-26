@@ -6,7 +6,7 @@ import time
 time.sleep(2)  # Wait for camera node to initialize
 result = subprocess.call([
     "rosrun", "dynamic_reconfigure", "dynparam", "set",
-    "/camera/realsense_camera", "enable_pointcloud", "true"
+    "/camera/realsense2_camera", "enable_pointcloud", "true"
 ])
 if result == 0:
     print("[OK] D435i pointcloud enabled")
