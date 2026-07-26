@@ -1,19 +1,26 @@
 <launch>
   <!-- D435i standalone launch - like teleop_keyboard -->
   <arg name="enable_depth_to_laser" default="true" doc="enable depth to laser scan"/>
-  <arg name="use_description" default="true" doc="启动 URDF(robot_state_publisher), 发布 base_link→camera_link→d435i_link 等静态 TF, 让 RViz 有坐标系参考"/>
-  <arg name="rviz" default="true" doc="启动 RViz (预配置: /d435i/scan + TF + RGB)"/>
+  <arg name="enable_pointcloud" default="true" doc="enable 3D pointcloud output"/>
+  <arg name="voxel_size" default="0.05" doc="voxel grid filter size (meters)"/>
+  <arg name="use_description" default="true" doc="启动 URDF(robot_state_publisher), 发布 base_link->camera_link->d435i_link 等静态 TF"/>
+  <arg name="rviz" default="true" doc="启动 RViz (预配置: scan + TF + pointcloud)"/>
 
-  <!-- URDF / robot_state_publisher: 发 base_link→camera_link→d435i_link 等静态 TF -->
+  <!-- URDF / robot_state_publisher: 发 base_link->camera_link->d435i_link 等静态 TF -->
   <include if="$(arg use_description)" file="$(find rm_ep_description)/launch/description.launch"/>
 
-  <!-- D435i driver -->
+  <!-- D435i driver (with pointcloud enable script) -->
   <include file="$(find rm_ep_driver)/launch/realsense_d435i.launch"/>
 
   <!-- depth to LaserScan (optional) -->
   <include if="$(arg enable_depth_to_laser)" file="$(find rm_ep_driver)/launch/d435i_depth_to_laser.launch"/>
 
-  <!-- RViz (预配置看 D435i scan, 配置在 rm_ep_driver/rviz/d435i_debug.rviz) -->
+  <!-- 3D pointcloud downsampling (optional) -->
+  <include if="$(arg enable_pointcloud)" file="$(find rm_ep_driver)/launch/d435i_pointcloud_downsample.launch">
+    <arg name="voxel_size" value="$(arg voxel_size)"/>
+  </include>
+
+  <!-- RViz (预配置看 scan + pointcloud + TF) -->
   <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz"
         args="-d $(find rm_ep_driver)/rviz/d435i_debug.rviz"/>
 </launch>
