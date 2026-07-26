@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Convert D435i depth image to PointCloud2."""
 import numpy as np
 import rospy
