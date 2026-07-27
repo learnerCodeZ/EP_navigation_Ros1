@@ -11,6 +11,9 @@
 
   <include if="$(arg enable_pointcloud)" file="$(find rm_ep_driver)/launch/d435i_depth_to_pointcloud.launch"/>
 
+  <!-- 点云投 map 帧 + 10cm 降采样 + 2Hz，供 WebRop/HL2 显示（依赖上面的 depth_to_pointcloud 出 /camera/depth/points） -->
+  <include if="$(arg enable_pointcloud)" file="$(find rm_ep_driver)/launch/d435i_cloud_to_map.launch"/>
+
   <node if="$(arg rviz)" name="d435i_rviz" pkg="rviz" type="rviz"
         args="-d $(find rm_ep_driver)/rviz/d435i_debug.rviz"/>
 </launch>
