@@ -418,6 +418,38 @@ roslaunch rm_ep_navigation navigation.launch use_d435i:=true map_file:=...
 roslaunch rm_ep_driver d435i_bringup.launch
 ```
 
+### 5.9 D435i 3D 点云（可选）
+
+D435i 支持输出 3D 点云（PointCloud2），可用于 3D 场景可视化、物体识别等。
+
+**启用方式**（默认已启用）：
+```bash
+roslaunch rm_ep_driver d435i_bringup.launch
+```
+
+启动后自动发布：
+- `/camera/depth/points` — 3D 点云（PointCloud2），带体素降采样（5cm）
+- `/camera/color/image_raw` — RGB 彩色画面
+- `/d435i/scan` — 深度转 LaserScan（2D）
+
+**调整点云参数**：
+```bash
+# 更稀疏的点云（10cm 体素）
+roslaunch rm_ep_driver d435i_bringup.launch voxel_size:=0.1
+
+# 更低帧率（每 3 帧发布 1 帧）
+roslaunch rm_ep_driver d435i_bringup.launch skip_frames:=3
+
+# 更远距离（最大 10m）
+roslaunch rm_ep_driver d435i_bringup.launch max_depth:=10.0
+```
+
+**RViz 查看点云**：
+1. 打开 RViz
+2. Add → PointCloud2
+3. Topic 选 `/camera/depth/points`
+4. Fixed Frame 设为 `base_link`
+
 > 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（RViz 在 Jetson 上渲染实时图像会卡）。
 
 ---

@@ -337,7 +337,13 @@ rostopic hz /camera/color/image_raw    # ~30Hz
 rostopic hz /d435i/scan                 # ~30Hz
 ```
 
-**RViz 里 RGB 黑 / No image**：Jetson 上 RViz 渲染实时图像易卡/黑，建议用 `rqt_image_view /camera/color/image_raw` 看画面，RViz 只看 `/d435i/scan` 点云。
+**RViz 里 RGB 黑 / No image**：Jetson 上 RViz 渲染实时图像易卡/黑，建议用 `rqt_image_view /camera/color/image_raw` 看画面，RViz 只看 `/d435i/scan` 和 `/camera/depth/points`。
+
+**3D 点云**：`d435i_bringup.launch` 自动启动 `depth_to_pointcloud.py`，从深度图生成 PointCloud2。脚本带体素降采样（默认 5cm）、跳帧（默认每 2 帧）、距离过滤（0.1-5m）。参数可通过 launch 文件调整。
+
+**realsense2_camera 2.3.2 的 `enable_pointcloud` 参数不生效**（rosparam 和 dynamic_reconfigure 都试过），所以用自写的 `depth_to_pointcloud.py` 节点替代。
+
+**voxel_grid nodelet 降采样**：pcl_ros 的 voxel_grid nodelet 有 remap 问题（只订阅 bond，不订阅 pointcloud topic），暂跳过，用脚本内置的 numpy 体素降采样。
 
 ## 待优化项
 

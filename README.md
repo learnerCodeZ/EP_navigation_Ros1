@@ -199,7 +199,18 @@ roslaunch rm_ep_driver d435i_bringup.launch
 
 D435i 的深度可转 LaserScan（`/d435i/scan`），作为前方约 86° 的补充感知。
 
-> 📷 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（轻量）；RViz 主要看 `/d435i/scan` 点云（Jetson 上 RViz 渲染实时图像会卡）。
+**3D 点云**（已集成）：`d435i_bringup.launch` 自动启动 `depth_to_pointcloud.py`，从深度图生成 PointCloud2（`/camera/depth/points`），带体素降采样（5cm）和跳帧优化。RViz 中可直接查看 3D 点云。
+
+```bash
+# 独立启动 D435i（含 2D scan + 3D 点云 + RViz）
+roslaunch rm_ep_driver d435i_bringup.launch
+
+# 调整降采样参数
+roslaunch rm_ep_driver d435i_bringup.launch voxel_size:=0.1  # 10cm 体素
+roslaunch rm_ep_driver d435i_bringup.launch skip_frames:=3   # 每 3 帧发布
+```
+
+> 📷 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（轻量）；RViz 主要看 `/d435i/scan` 和 `/camera/depth/points`（Jetson 上 RViz 渲染实时图像会卡）。
 
 更详细的故障排查见 [docs/details.md](docs/details.md)。
 
