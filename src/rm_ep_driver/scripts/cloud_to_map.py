@@ -36,14 +36,18 @@ class CloudToMap:
         self.rate_hz = float(rospy.get_param("~rate_hz", 2.0))
         self.period = rospy.Duration(1.0 / max(self.rate_hz, 0.1))
         self.next_pub = rospy.Time.now()
+        # H4 累积拼帧：多帧在 map 里拼起来，画出整个环境（单帧只前方一小片太稀）
+        self.accumulate = bool(rospy.get_param("~accumulate", True))
+        self.max_points = int(rospy.get_param("~max_points", 20000))
+        self._accum = set()  # 累积体素键集合 {(ix,iy,iz)}，每键=一个 self.voxel 格子
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.pub = rospy.Publisher("/d435i/cloud_map", PointCloud2, queue_size=1)
         self.sub = rospy.Subscriber("/camera/depth/points", PointCloud2, self.cb_cloud, queue_size=1)
-        rospy.loginfo("cloud_to_map 就绪: voxel=%.2fm rate=%.1fHz（订阅 /camera/depth/points → 发布 /d435i/cloud_map）",
-                      self.voxel, self.rate_hz)
+        rospy.loginfo("cloud_to_map 就绪: voxel=%.2fm rate=%.1fHz accumulate=%s max=%d（订阅 /camera/depth/points → 发布 /d435i/cloud_map）",
+                      self.voxel, self.rate_hz, self.accumulate, self.max_points)
 
     def cb_cloud(self, msg):
         # 限速：不到下一次发布时刻就跳过整帧处理
@@ -74,16 +78,32 @@ class CloudToMap:
         R = quat_to_rotmat(q.x, q.y, q.z, q.w)
         pts_map = pts @ R.T + np.array([t.x, t.y, t.z], dtype=np.float64)
 
-        # map 帧体素降采样
+        # map 帧体素降采样（每格留一个代表点 + 记录体素键，供累积去重）
         if self.voxel > 0 and len(pts_map) > 0:
             key = np.floor(pts_map / self.voxel).astype(np.int64)
             _, idx = np.unique(key, axis=0, return_index=True)
             pts_map = pts_map[idx]
+            frame_keys = set(map(tuple, key[idx].tolist()))
+        else:
+            frame_keys = set()
+
+        # H4 累积拼帧：本帧体素并入累积集 → 发布累积结果（一帧帧拼出整个环境）
+        if self.accumulate:
+            self._accum |= frame_keys
+            if len(self._accum) > self.max_points:
+                # 超上限丢弃一部分（set 无序，近似；room 级 10cm 体素一般到不了上限）
+                self._accum = set(list(self._accum)[-self.max_points:])
+            # 体素键 → 体素中心点，作为发布点云
+            pts_out = (np.fromiter((c for k in self._accum for c in k),
+                                   dtype=np.float64, count=len(self._accum) * 3)
+                       .reshape(-1, 3) * self.voxel + self.voxel / 2.0)
+        else:
+            pts_out = pts_map  # 单帧（不累积）
 
         header = rospy.Header()
         header.stamp = stamp
         header.frame_id = "map"
-        cloud_out = pc2.create_cloud_xyz32(header, pts_map.tolist())
+        cloud_out = pc2.create_cloud_xyz32(header, pts_out.tolist())
         self.pub.publish(cloud_out)
 
 
