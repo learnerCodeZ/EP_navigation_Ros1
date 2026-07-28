@@ -262,6 +262,8 @@ rosrun octomap_server octomap_saver -f ~/EP_navigation_Ros1/src/rm_ep_navigation
 roslaunch rm_ep_driver d435i_octomap.launch load_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室.bt
 ```
 
+**RViz 配置说明**：`octomap_debug.rviz` 预设了 Grid + Map + PointCloud2 + OctoMap 3D + TF 五个显示。加载模式下如果 OctoMap 未自动显示，手动添加：**Add → By Topic → /octomap_full → Map**，然后 **File → Save Config** 保存。
+
 **关键话题**：
 
 | 话题 | 帧 | 说明 |
