@@ -3,7 +3,7 @@
   ==========================
   两种模式：
     1. 实时建图：订阅 /d435i/cloud_map，生成八叉树 3D 地图
-    2. 加载已有地图：加载 .bt 文件，同时发布话题供 RViz/WebRop 消费
+    2. 加载已有地图：加载 .bt 文件，通过服务→话题转发供 RViz 消费
 
   使用方法（实时建图）：
     1. 先启动导航：roslaunch rm_ep_navigation navigation.launch map_name:=xxx rviz:=false
@@ -14,7 +14,7 @@
   使用方法（加载已有地图）：
     roslaunch rm_ep_driver d435i_octomap.launch load_file:=/path/to/map.bt
 
-  保存地图（建图完成后，另开终端）：
+  保存地图（建图完成后，另开终端，必须带 .bt 后缀）：
     rosrun octomap_server octomap_saver -f $(rospack find rm_ep_navigation)/maps/3d/地图名.bt
 
   3D 地图存放目录：rm_ep_navigation/maps/3d/
@@ -32,8 +32,8 @@
   <arg name="max_range"      default="5.0"              doc="点云最大观测距离 (m)，-1 为不限"/>
   <arg name="rviz"           default="true"             doc="是否自动打开 RViz"/>
 
-  <!-- ====== 点云 → 八叉树（实时建图 或 加载已有地图） ====== -->
-  <node name="octomap_server_node" pkg="octomap_server" type="octomap_server_node" output="screen">
+  <!-- ====== 模式1：实时建图（从点云构建八叉树） ====== -->
+  <node unless="$(eval arg('load_file') != '')" name="octomap_server_node" pkg="octomap_server" type="octomap_server_node" output="screen">
     <remap from="cloud_in" to="$(arg cloud_topic)"/>
     <param name="frame_id"        type="string" value="$(arg frame_id)"/>
     <param name="resolution"      type="double" value="$(arg resolution)"/>
@@ -42,16 +42,19 @@
     <param name="max_range"       type="double" value="$(arg max_range)"/>
     <param name="latch"           type="bool"   value="true"/>
     <param name="compress_map"    type="bool"   value="true"/>
-    <!-- 概率模型：hit=0.7, miss=0.4, min=0.12, max=0.97 -->
     <param name="sensor_model_hit"  type="double" value="0.7"/>
     <param name="sensor_model_miss" type="double" value="0.4"/>
     <param name="sensor_model_min" type="double" value="0.12"/>
     <param name="sensor_model_max" type="double" value="0.97"/>
-    <!-- 加载已有地图（如果有） -->
-    <param name="octomap_path"    type="string" value="$(arg load_file)"/>
   </node>
 
-  <!-- 加载模式时发布静态 TF（没有导航就没有 map 坐标系，RViz 需要） -->
+  <!-- ====== 模式2：加载已有 .bt 文件 ====== -->
+  <!-- 2a. octomap_server_static（加载文件，提供服务） -->
+  <node if="$(eval arg('load_file') != '')" name="octomap_server_static" pkg="octomap_server" type="octomap_server_static"
+        args="$(arg load_file)" output="screen"/>
+  <!-- 2b. 服务→话题转发（RViz 订阅话题，不订阅服务） -->
+  <node if="$(eval arg('load_file') != '')" name="octomap_republisher" pkg="rm_ep_driver" type="octomap_publisher.py" output="screen"/>
+  <!-- 2c. 静态 TF（没有导航就没有 map 坐标系） -->
   <node if="$(eval arg('load_file') != '')" name="map_tf" pkg="tf2_ros" type="static_transform_publisher"
         args="0 0 0 0 0 0 map base_link"/>
 
