@@ -214,6 +214,41 @@ roslaunch rm_ep_driver d435i_bringup.launch skip_frames:=3   # 每 3 帧发布
 
 更详细的故障排查见 [docs/details.md](docs/details.md)。
 
+#### 3D 彩色点云 + Octomap 建图
+
+D435i 支持生成**累积彩色点云**和 **Octomap 3D 八叉树地图**，可直接在 WebRop 浏览器或 HoloLens2 上查看（不需要 SSH 跑 RViz）。
+
+**3D 彩色点云**（`/d435i/cloud_map`，map 帧，10cm 体素，2Hz）：
+- `depth_to_pointcloud.py`：深度图 → xyzrgb 彩色点云（TF 投影取色，无彩色时退化 xyz）。
+- `cloud_to_map.py`：点云投到 map 帧（tf2 坐标变换）、体素降采样、**累积拼帧**（多帧拼出完整环境）、**颜色平均**（多次观测取均值，更准更稳定）。
+- `d435i_bringup.launch` 自动带起上述两个节点（`use_d435i:=true` 时）。
+
+**Octomap 3D 建图**（`octomap_server`，八叉树 3D 地图）：
+- 独立启动：`roslaunch rm_ep_driver d435i_octomap.launch`（自动弹出预配置 RViz）
+- 依赖：`sudo apt install ros-noetic-octomap-server ros-noetic-octomap-rviz-plugins`
+
+```bash
+# 导航 + 相机（终端1 + 终端2，正常启动）
+roslaunch mrrep_bridge start.launch mode:=nav map_name:=你的地图
+roslaunch rm_ep_driver d435i_bringup.launch use_description:=false rviz:=false
+
+# Octomap 3D 建图（终端3，自动弹 RViz）
+roslaunch rm_ep_driver d435i_octomap.launch             # 会弹 RViz
+roslaunch rm_ep_driver d435i_octomap.launch rviz:=false  # 不弹（用 Foxglove 看）
+```
+
+**关键话题**：
+
+| 话题 | 帧 | 说明 |
+|---|---|---|
+| `/d435i/cloud_map` | map | 累积彩色点云（10cm，2Hz，WebRop/HL2 消费） |
+| `/camera/depth/points` | camera_depth_optical_frame | 深度点云（xyzrgb，5cm，原帧率，RViz 调试用） |
+| `/octomap_binary` / `/octomap_full` | map | 八叉树 3D 地图 |
+| `/d435i/scan` | d435i_link | 深度转 LaserScan（进 local_costmap 避障） |
+| `/camera/color/image_raw/compressed` | — | D435i RGB 画面（WebRop 深度相机面板消费） |
+
+---
+
 ### EP 连接模式
 
 | 模式 | 参数 | 说明 |
