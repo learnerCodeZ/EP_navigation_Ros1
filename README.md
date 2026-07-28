@@ -316,6 +316,16 @@ rm_ep_navigation/maps/
     └── 教室.bt
 ```
 
+查看已有地图：
+
+```bash
+# 2D 地图
+ls ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/2d/
+
+# 3D 地图
+ls ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/
+```
+
 建图 launch 参数：
 
 | 参数 | 默认值 | 说明 |
