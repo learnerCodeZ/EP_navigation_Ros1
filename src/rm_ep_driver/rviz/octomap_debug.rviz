@@ -27,6 +27,43 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
+    - Class: rviz/Map
+      Enabled: true
+      Name: Map
+      Topic: /map
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Axes:
+        X: true
+        Y: true
+        Z: true
+      Channel Name: rgb
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: D435i PointCloud (彩色)
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.0099999997764825828
+      Style: Points
+      Topic: /d435i/cloud_map
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Class: octomap_rviz_plugin/OccupancyGrid
+      Enabled: true
+      Name: OctoMap 3D
+      Topic: /octomap_full
+      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
@@ -38,11 +75,6 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Update Interval: 0
-    - Class: octomap_rviz_plugin/OccupancyGrid
-      Enabled: true
-      Name: OctoMap 3D
-      Topic: /octomap_full
-      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
