@@ -225,25 +225,42 @@ D435i 支持生成**累积彩色点云**和 **Octomap 3D 八叉树地图**，可
 
 **Octomap 3D 建图**（`octomap_server`，八叉树 3D 地图）：
 - 独立启动：`roslaunch rm_ep_driver d435i_octomap.launch`（自动弹出预配置 RViz）
-- 依赖：`sudo apt install ros-noetic-octomap-server ros-noetic-octomap-rviz-plugins`
+- 依赖（一次性安装）：`sudo apt install ros-noetic-octomap-server ros-noetic-octomap-rviz-plugins`
+
+**完整测试流程**（4 个终端依次启动）：
 
 ```bash
-# 导航 + 相机（终端1 + 终端2，正常启动）
-roslaunch rm_ep_navigation navigation.launch map_name:=你的地图 rviz:=false
+# === 终端1：导航（提供 map 坐标系 + 底盘 + 激光雷达）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_navigation navigation.launch map_name:=教室 rviz:=false
+
+# === 终端2：D435i 深度相机（等终端1 稳定后再开）===
+source ~/EP_navigation_Ros1/devel/setup.bash
 roslaunch rm_ep_driver d435i_bringup.launch use_description:=false rviz:=false
 
-# Octomap 3D 建图（终端3，自动弹 RViz）
-roslaunch rm_ep_driver d435i_octomap.launch             # 会弹 RViz
-roslaunch rm_ep_driver d435i_octomap.launch rviz:=false  # 不弹（用 Foxglove 看）
+# === 终端3：Octomap 3D 建图（自动弹 RViz）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_driver d435i_octomap.launch
+# 不弹 RViz：roslaunch rm_ep_driver d435i_octomap.launch rviz:=false
 
-# 键盘控制走动建图（终端4）
+# === 终端4：键盘控制（推动小车建图）===
+source ~/EP_navigation_Ros1/devel/setup.bash
 roslaunch rm_ep_driver teleop_keyboard.launch
+```
 
-# 建图完成后，保存 3D 八叉树地图（另开终端）
-rosrun octomap_server octomap_saver -f $(rospack find rm_ep_navigation)/maps/3d/地图名
+用 WASD 推小车走一圈，终端3 的 RViz 里八叉树会逐渐成型。
 
-# 加载已有 3D 地图（只可视化，不建图）
-roslaunch rm_ep_driver d435i_octomap.launch load_file:=$(rospack find rm_ep_navigation)/maps/3d/地图名.bt
+**保存 3D 地图**（建图完成后，另开终端）：
+
+```bash
+rosrun octomap_server octomap_saver -f ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室
+# 生成 maps/3d/教室.bt
+```
+
+**加载已有 3D 地图**（只可视化，不需要小车）：
+
+```bash
+roslaunch rm_ep_driver d435i_octomap.launch load_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室.bt
 ```
 
 **关键话题**：
