@@ -45,8 +45,8 @@ class CloudToMap:
         self.period = rospy.Duration(1.0 / max(self.rate_hz, 0.1))
         self.next_pub = rospy.Time.now()
         self.accumulate = bool(rospy.get_param("~accumulate", True))
-        self.max_points = int(rospy.get_param("~max_points", 20000))
-        self._accum = {}  # H4+H5：{体素键(ix,iy,iz): (r,g,b) 或 None}
+        self.max_points = int(rospy.get_param("~max_points", 40000))  # 增大上限，Jetson 内存允许
+        self._accum = {}  # H4+H5+②增强：{体素键(ix,iy,iz): [r_sum,g_sum,b_sum,count] 或 None}
 
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -101,13 +101,22 @@ class CloudToMap:
             keys_sel = key[idx]
             if rgb is not None:
                 rgb_sel = rgb[idx]
-                frame_color = {tuple(keys_sel[i]): tuple(int(c) for c in rgb_sel[i]) for i in range(len(idx))}
+                frame_color = {tuple(keys_sel[i]): [int(rgb_sel[i,0]), int(rgb_sel[i,1]), int(rgb_sel[i,2]), 1]
+                               for i in range(len(idx))}
             else:
                 frame_color = {tuple(k): None for k in keys_sel.tolist()}
 
-        # 累积拼帧
+        # 累积拼帧（颜色平均：多次观测同一格子取均值，比单纯取最新更准更平滑）
         if self.accumulate:
-            self._accum.update(frame_color)  # 新体素加入；旧体素颜色更新为最新
+            for k, c in frame_color.items():
+                if k in self._accum:
+                    old = self._accum[k]
+                    if old is not None and c is not None and old[3] < 1000:  # count 上限防溢出
+                        self._accum[k] = [old[0] + c[0], old[1] + c[1], old[2] + c[2], old[3] + 1]
+                    elif c is not None:
+                        self._accum[k] = c  # 旧无颜色 → 用新颜色覆盖
+                else:
+                    self._accum[k] = c
             if len(self._accum) > self.max_points:
                 items = list(self._accum.items())
                 self._accum = dict(items[-self.max_points:])
@@ -117,8 +126,13 @@ class CloudToMap:
                   k[2] * self.voxel + self.voxel / 2.0] for k in keys], dtype=np.float32)
             any_color = any(v is not None for v in self._accum.values())
             if any_color:
+                # 颜色平均：每个格子 r_sum/count 取均值，[0,255] 内钳位
                 rgb_out = np.array(
-                    [self._accum[k] if self._accum[k] is not None else (160, 160, 160) for k in keys],
+                    [(max(0, min(255, v[0] // v[3])),
+                      max(0, min(255, v[1] // v[3])),
+                      max(0, min(255, v[2] // v[3])))
+                     if v is not None and v[3] > 0 else (160, 160, 160)
+                     for v in self._accum.values()],
                     dtype=np.uint8)
             else:
                 rgb_out = None
