@@ -229,12 +229,21 @@ D435i 支持生成**累积彩色点云**和 **Octomap 3D 八叉树地图**，可
 
 ```bash
 # 导航 + 相机（终端1 + 终端2，正常启动）
-roslaunch mrrep_bridge start.launch mode:=nav map_name:=你的地图
+roslaunch rm_ep_navigation navigation.launch map_name:=你的地图 rviz:=false
 roslaunch rm_ep_driver d435i_bringup.launch use_description:=false rviz:=false
 
 # Octomap 3D 建图（终端3，自动弹 RViz）
 roslaunch rm_ep_driver d435i_octomap.launch             # 会弹 RViz
 roslaunch rm_ep_driver d435i_octomap.launch rviz:=false  # 不弹（用 Foxglove 看）
+
+# 键盘控制走动建图（终端4）
+roslaunch rm_ep_driver teleop_keyboard.launch
+
+# 建图完成后，保存 3D 八叉树地图（另开终端）
+rosrun octomap_server octomap_saver -f $(rospack find rm_ep_navigation)/maps/3d/地图名
+
+# 加载已有 3D 地图（只可视化，不建图）
+roslaunch rm_ep_driver d435i_octomap.launch load_file:=$(rospack find rm_ep_navigation)/maps/3d/地图名.bt
 ```
 
 **关键话题**：
@@ -292,6 +301,21 @@ rosrun rm_ep_navigation save_map.sh 教室
 rosrun rm_ep_navigation save_map.sh
 ```
 
+地图目录结构：
+
+```
+rm_ep_navigation/maps/
+├── 2d/                    ← 2D 占用栅格地图（gmapping 建图，AMCL 导航用）
+│   ├── 教室/
+│   │   ├── 教室.yaml
+│   │   └── 教室.pgm
+│   └── 20260621_153045/
+│       ├── 20260621_153045.yaml
+│       └── 20260621_153045.pgm
+└── 3d/                    ← 3D 八叉树地图（Octomap 建图，未来 3D 导航用）
+    └── 教室.bt
+```
+
 建图 launch 参数：
 
 | 参数 | 默认值 | 说明 |
@@ -309,8 +333,11 @@ rosrun rm_ep_navigation save_map.sh
 source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 加载地图并启动导航
+roslaunch rm_ep_navigation navigation.launch map_name:=教室 rviz:=false
+
+# 指定绝对路径（优先级高于 map_name）
 roslaunch rm_ep_navigation navigation.launch \
-  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/教室/教室.yaml
+  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/2d/教室/教室.yaml
 
 # 在 RVIZ 中使用 "2D Nav Goal" 工具点击目标点即可
 ```

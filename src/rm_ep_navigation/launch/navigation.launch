@@ -9,7 +9,7 @@
   <arg name="ep_ip" default="" doc="EP IP 地址"/>
   <arg name="lidar_frame" default="laser_link" doc="激光雷达 TF 帧名"/>
   <arg name="serial_port" default="/dev/rplidar" doc="激光雷达串口号（udev 固定别名）"/>
-  <arg name="map_name" default="" doc="地图名称 (maps/ 下的文件夹名，如 20260704_223537 或 家里)"/>
+  <arg name="map_name" default="" doc="2D 地图名称 (maps/2d/ 下的文件夹名，如 20260704_223537)"/>
   <arg name="map_file" default="" doc="地图 yaml 绝对路径 (优先级高于 map_name)"/>
   <arg name="rviz" default="true" doc="是否启动 RVIZ"/>
   <arg name="use_hi12" default="true" doc="是否使用 HI12 外置 IMU"/>
@@ -54,12 +54,12 @@
   </node>
 
   <!-- ========== 6. map_server 加载地图 ========== -->
-  <!-- 用法: map_name:=20260704_223537  (maps/ 下的文件夹名)
+  <!-- 用法: map_name:=20260704_223537  (maps/2d/ 下的文件夹名)
          或 map_file:=/abs/path/map.yaml (绝对路径，优先级高) -->
   <node if="$(eval arg('map_file') != '')" name="map_server" pkg="map_server" type="map_server"
         args="$(arg map_file)"/>
   <node unless="$(eval arg('map_file') != '')" name="map_server" pkg="map_server" type="map_server"
-        args="$(find rm_ep_navigation)/maps/$(arg map_name)/$(arg map_name).yaml"/>
+        args="$(find rm_ep_navigation)/maps/2d/$(arg map_name)/$(arg map_name).yaml"/>
 
   <!-- ========== 7. AMCL 定位 ========== -->
   <node name="amcl" pkg="amcl" type="amcl" output="screen">

@@ -1,32 +1,55 @@
+<!--
+  Octomap 3D 建图
+  ================
+  订阅 /d435i/cloud_map（map 帧彩色点云），生成八叉树 3D 地图。
+
+  使用方法：
+    1. 先启动导航（提供 map 坐标系）：roslaunch rm_ep_navigation navigation.launch map_name:=xxx rviz:=false
+    2. 启动 D435i：roslaunch rm_ep_driver d435i_bringup.launch
+    3. 启动本文件：roslaunch rm_ep_driver d435i_octomap.launch
+    4. 用键盘控制小车走动，RViz 看到八叉树逐渐成型
+
+  保存地图（建图完成后，另开终端）：
+    rosrun octomap_server octomap_saver -f $(rospack find rm_ep_navigation)/maps/3d/地图名.bt
+
+  加载已有地图（跳过建图，只可视化）：
+    roslaunch rm_ep_driver d435i_octomap.launch load_file:=/path/to/map.bt
+
+  3D 地图存放目录：rm_ep_navigation/maps/3d/
+  2D 地图存放目录：rm_ep_navigation/maps/2d/
+-->
+
 <launch>
-  <!-- Octomap 3D 建图：累积彩色点云(/d435i/cloud_map, map帧) → 八叉树3D地图
-       效果：车移动时逐步构建3D占用地图，可查看3D结构。
+  <!-- ====== 参数 ====== -->
+  <arg name="cloud_topic"    default="/d435i/cloud_map" doc="输入点云话题（map 帧）"/>
+  <arg name="frame_id"       default="map"              doc="地图坐标系"/>
+  <arg name="resolution"     default="0.10"             doc="八叉树分辨率 (m)，越小越精细但越耗内存"/>
+  <arg name="load_file"      default=""                 doc="已有 .bt 文件路径（留空则从点云实时建图）"/>
+  <arg name="z_min"          default="0.05"             doc="高度裁剪下限 (m)，过滤地面"/>
+  <arg name="z_max"          default="2.0"              doc="高度裁剪上限 (m)，过滤天花板"/>
+  <arg name="max_range"      default="5.0"              doc="点云最大观测距离 (m)，-1 为不限"/>
+  <arg name="rviz"           default="true"             doc="是否自动打开 RViz"/>
 
-       注意：用map帧点云 → octomap_server 只标occupied(无free-space rays)；
-       对3D可视化足够；要做3D导航才需换回camera帧原始云+完整raycasting。
-
-       依赖：
-       - navigation.launch(use_d435i:=true) 提供 TF(map→base_link→camera)
-       - cloud_to_map 起累积(accumulate:=true)
-       - Jetson 先装: sudo apt install ros-noetic-octomap-server ros-noetic-octomap-rviz-plugins
-
-       用法：在 start.launch(mode:=nav) + d435i_bringup 跑起来之后，另开终端起：
-         roslaunch rm_ep_driver d435i_octomap.launch
-       -->
-  <arg name="cloud_topic" default="/d435i/cloud_map" doc="点云话题（已累积，map 帧）"/>
-  <arg name="resolution" default="0.10" doc="八叉树分辨率(米)，越小越精细但越耗内存"/>
-  <arg name="rviz" default="true" doc="是否自动弹出 RViz（关闭可手动用 Foxglove 看）"/>
-
-  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+  <!-- ====== 点云 → 八叉树 ====== -->
+  <node name="octomap_server_node" pkg="octomap_server" type="octomap_server_node" output="screen">
     <remap from="cloud_in" to="$(arg cloud_topic)"/>
-    <param name="frame_id" value="map"/>
-    <param name="resolution" value="$(arg resolution)"/>
-    <!-- 高度裁剪：只取 0.05m–2m（去地板/天花板，室内合适） -->
-    <param name="pointcloud_min_z" value="0.05"/>
-    <param name="pointcloud_max_z" value="2.0"/>
+    <param name="frame_id"        type="string" value="$(arg frame_id)"/>
+    <param name="resolution"      type="double" value="$(arg resolution)"/>
+    <param name="z_min"           type="double" value="$(arg z_min)"/>
+    <param name="z_max"           type="double" value="$(arg z_max)"/>
+    <param name="max_range"       type="double" value="$(arg max_range)"/>
+    <param name="latch"           type="bool"   value="true"/>
+    <param name="compress_map"    type="bool"   value="true"/>
+    <!-- 概率模型：hit=0.7, miss=0.4, min=0.12, max=0.97 -->
+    <param name="sensor_model_hit"  type="double" value="0.7"/>
+    <param name="sensor_model_miss" type="double" value="0.4"/>
+    <param name="sensor_model_min"  type="double" value="0.12"/>
+    <param name="sensor_model_max"  type="double" value="0.97"/>
+    <!-- 加载已有地图（如果有） -->
+    <param name="octomap_path"    type="string" value="$(arg load_file)"/>
   </node>
 
-  <!-- RViz（预配置：map 帧 + Grid + OctoMap OccupancyGrid 显示 /octomap_full） -->
-  <node if="$(arg rviz)" name="octomap_rviz" pkg="rviz" type="rviz"
-        args="-d $(find rm_ep_driver)/rviz/octomap_debug.rviz" output="screen"/>
+  <!-- ====== RViz 可视化 ====== -->
+  <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find rm_ep_driver)/rviz/octomap_debug.rviz"/>
 </launch>
