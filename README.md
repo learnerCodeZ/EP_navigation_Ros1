@@ -250,11 +250,10 @@ roslaunch rm_ep_driver teleop_keyboard.launch
 
 用 WASD 推小车走一圈，终端3 的 RViz 里八叉树会逐渐成型。
 
-**保存 3D 地图**（建图完成后，另开终端）：
+**保存 3D 地图**（建图完成后，另开终端，必须带 `.bt` 后缀）：
 
 ```bash
-rosrun octomap_server octomap_saver -f ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室
-# 生成 maps/3d/教室.bt
+rosrun octomap_server octomap_saver -f ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室.bt
 ```
 
 **加载已有 3D 地图**（只可视化，不需要小车）：
