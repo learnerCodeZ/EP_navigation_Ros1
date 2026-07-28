@@ -4,10 +4,11 @@
 """
 import rospy
 from octomap_msgs.srv import GetOctomap
+from octomap_msgs.msg import Octomap
 
 def main():
     rospy.init_node('octomap_republisher')
-    pub = rospy.Publisher('/octomap_full', rospy.AnyMsg, queue_size=1, latch=True)
+    pub = rospy.Publisher('/octomap_full', Octomap, queue_size=1, latch=True)
 
     rospy.loginfo("等待 octomap_server_static 服务...")
     rospy.wait_for_service('/octomap_full')
