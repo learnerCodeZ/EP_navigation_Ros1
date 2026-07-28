@@ -50,9 +50,8 @@
   </node>
 
   <!-- ====== 模式2：加载已有 .bt 文件（只可视化） ====== -->
-  <node if="$(eval arg('load_file') != '')" name="octomap_server_static" pkg="octomap_server" type="octomap_server_static" output="screen">
-    <param name="octomap_path" type="string" value="$(arg load_file)"/>
-    <param name="frame_id"     type="string" value="$(arg frame_id)"/>
+  <node if="$(eval arg('load_file') != '')" name="octomap_server_static" pkg="octomap_server" type="octomap_server_static" args="$(arg load_file)" output="screen">
+    <param name="frame_id" type="string" value="$(arg frame_id)"/>
   </node>
 
   <!-- ====== RViz 可视化 ====== -->
