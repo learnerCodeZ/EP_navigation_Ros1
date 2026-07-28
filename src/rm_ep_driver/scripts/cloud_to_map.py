@@ -75,13 +75,14 @@ class CloudToMap:
             rec = np.array(list(pc2.read_points(msg, field_names=("x", "y", "z", "rgb"), skip_nans=True)))
             if rec.size == 0:
                 return
-            pts = np.column_stack([rec["x"], rec["y"], rec["z"]]).astype(np.float64)
-            rgb = unpack_rgb(rec["rgb"].astype(np.float32))
+            # read_points 返回普通数组（非结构化），用列索引而非字段名
+            pts = rec[:, :3].astype(np.float64)                    # xyz 三列
+            rgb = unpack_rgb(rec[:, 3].astype(np.float32))         # rgb 一列（packed float32）
         else:
             rec = np.array(list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)))
             if rec.size == 0:
                 return
-            pts = np.column_stack([rec["x"], rec["y"], rec["z"]]).astype(np.float64)
+            pts = rec.astype(np.float64).reshape(-1, 3)
             rgb = None
         pts = pts.reshape(-1, 3)
 
