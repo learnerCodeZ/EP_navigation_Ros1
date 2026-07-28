@@ -15,6 +15,7 @@
        -->
   <arg name="cloud_topic" default="/d435i/cloud_map" doc="点云话题（已累积，map 帧）"/>
   <arg name="resolution" default="0.10" doc="八叉树分辨率(米)，越小越精细但越耗内存"/>
+  <arg name="rviz" default="true" doc="是否自动弹出 RViz（关闭可手动用 Foxglove 看）"/>
 
   <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
     <remap from="cloud_in" to="$(arg cloud_topic)"/>
@@ -24,4 +25,8 @@
     <param name="pointcloud_min_z" value="0.05"/>
     <param name="pointcloud_max_z" value="2.0"/>
   </node>
+
+  <!-- RViz（预配置：map 帧 + Grid + OctoMap OccupancyGrid 显示 /octomap_full） -->
+  <node if="$(arg rviz)" name="octomap_rviz" pkg="rviz" type="rviz"
+        args="-d $(find rm_ep_driver)/rviz/octomap_debug.rviz" output="screen"/>
 </launch>
