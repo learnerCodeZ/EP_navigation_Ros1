@@ -3,7 +3,7 @@
   ==========================
   两种模式：
     1. 实时建图：订阅 /d435i/cloud_map，生成八叉树 3D 地图
-    2. 加载已有地图：加载 .bt 文件，只可视化
+    2. 加载已有地图：加载 .bt 文件，同时发布话题供 RViz/WebRop 消费
 
   使用方法（实时建图）：
     1. 先启动导航：roslaunch rm_ep_navigation navigation.launch map_name:=xxx rviz:=false
@@ -32,8 +32,8 @@
   <arg name="max_range"      default="5.0"              doc="点云最大观测距离 (m)，-1 为不限"/>
   <arg name="rviz"           default="true"             doc="是否自动打开 RViz"/>
 
-  <!-- ====== 模式1：实时建图（从点云构建八叉树） ====== -->
-  <node unless="$(eval arg('load_file') != '')" name="octomap_server_node" pkg="octomap_server" type="octomap_server_node" output="screen">
+  <!-- ====== 点云 → 八叉树（实时建图 或 加载已有地图） ====== -->
+  <node name="octomap_server_node" pkg="octomap_server" type="octomap_server_node" output="screen">
     <remap from="cloud_in" to="$(arg cloud_topic)"/>
     <param name="frame_id"        type="string" value="$(arg frame_id)"/>
     <param name="resolution"      type="double" value="$(arg resolution)"/>
@@ -47,11 +47,8 @@
     <param name="sensor_model_miss" type="double" value="0.4"/>
     <param name="sensor_model_min" type="double" value="0.12"/>
     <param name="sensor_model_max" type="double" value="0.97"/>
-  </node>
-
-  <!-- ====== 模式2：加载已有 .bt 文件（只可视化） ====== -->
-  <node if="$(eval arg('load_file') != '')" name="octomap_server_static" pkg="octomap_server" type="octomap_server_static" args="$(arg load_file)" output="screen">
-    <param name="frame_id" type="string" value="$(arg frame_id)"/>
+    <!-- 加载已有地图（如果有） -->
+    <param name="octomap_path"    type="string" value="$(arg load_file)"/>
   </node>
 
   <!-- 加载模式时发布静态 TF（没有导航就没有 map 坐标系，RViz 需要） -->
