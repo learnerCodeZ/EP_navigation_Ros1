@@ -54,6 +54,10 @@
     <param name="frame_id" type="string" value="$(arg frame_id)"/>
   </node>
 
+  <!-- 加载模式时发布静态 TF（没有导航就没有 map 坐标系，RViz 需要） -->
+  <node if="$(eval arg('load_file') != '')" name="map_tf" pkg="tf2_ros" type="static_transform_publisher"
+        args="0 0 0 0 0 0 map base_link"/>
+
   <!-- ====== RViz 可视化 ====== -->
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"
         args="-d $(find rm_ep_driver)/rviz/octomap_debug.rviz"/>
