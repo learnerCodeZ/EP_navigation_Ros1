@@ -39,6 +39,11 @@ sudo apt install -y \
   ros-noetic-teb-local-planner
 ```
 
+```bash
+# D435i 深度相机（可选；不用 D435i 可跳过）
+sudo apt install -y ros-noetic-realsense2-camera ros-noetic-depthimage-to-laserscan
+```
+
 ### 1.4 安装 Python 依赖
 
 ```bash
@@ -164,6 +169,28 @@ sudo usermod -a -G dialout $USER
    ```
 
 > 详细的 HI12 安装方案（安装位置、坐标系对齐、磁力计校准）见 [hi12_installation_plan.md](hi12_installation_plan.md)。
+
+### 2.5 D435i 深度相机连接（可选）
+
+1. **D435i 必须直连上位机的 USB 口**，不能插 EP 底盘的 Type-C 口（底盘口连底盘主控板，数据到不了上位机；底盘封闭固件无法转发 USB 设备）。
+
+2. 必须接 **USB 3.0 口**（蓝色）+ **USB 3.0 数据线**（USB-A 头蓝色、9 触点；很多 USB-C 线是 USB 2.0 充电线，只有 4 触点，会导致 RGB 不可用 + 掉线）。
+
+3. 验证 USB 3.0（关键）：
+   ```bash
+   lsusb -t | grep -A1 5000M     # D435i 应在 5000M 链路（USB 2.0 是 480M）
+   lsusb | grep 8086             # 应为 8086:0b3a（USB 3.0 模式 PID；USB 2.0 是 0ad6）
+   ```
+
+4. 验证驱动：
+   ```bash
+   roslaunch rm_ep_driver d435i_bringup.launch
+   # 日志应: Device Name "Intel RealSense D435I"（不是 "USB2"）+ RGB camera was found + 不掉线
+   rostopic hz /camera/color/image_raw    # ~30Hz
+   rostopic hz /d435i/scan                 # ~30Hz
+   ```
+
+> D435i 默认 `use_d435i:=false`，不启用时与建图/导航完全无关。详细故障排查见 [details.md](details.md)。
 
 ---
 
@@ -376,6 +403,55 @@ rosrun tf view_frames
 xdg-open frames.pdf
 ```
 
+### 5.8 启用 D435i 深度相机（可选）
+
+D435i 默认不启用。建图/导航时加 `use_d435i:=true` 即可附带启动（不影响原有流程）：
+```bash
+# 建图附带 D435i
+roslaunch rm_ep_navigation mapping.launch use_d435i:=true
+# 导航附带 D435i（/d435i/scan 会进 local_costmap 参与避障）
+roslaunch rm_ep_navigation navigation.launch use_d435i:=true map_file:=...
+```
+
+独立调试 D435i（自动起 URDF + 驱动 + RViz，看 scan 点云）：
+```bash
+roslaunch rm_ep_driver d435i_bringup.launch
+```
+
+### 5.9 D435i 3D 点云（可选）
+
+D435i 支持输出 3D 点云（PointCloud2），可用于 3D 场景可视化、物体识别等。
+
+**启用方式**（默认已启用）：
+```bash
+roslaunch rm_ep_driver d435i_bringup.launch
+```
+
+启动后自动发布：
+- `/camera/depth/points` — 3D 点云（PointCloud2），带体素降采样（5cm）
+- `/camera/color/image_raw` — RGB 彩色画面
+- `/d435i/scan` — 深度转 LaserScan（2D）
+
+**调整点云参数**：
+```bash
+# 更稀疏的点云（10cm 体素）
+roslaunch rm_ep_driver d435i_bringup.launch voxel_size:=0.1
+
+# 更低帧率（每 3 帧发布 1 帧）
+roslaunch rm_ep_driver d435i_bringup.launch skip_frames:=3
+
+# 更远距离（最大 10m）
+roslaunch rm_ep_driver d435i_bringup.launch max_depth:=10.0
+```
+
+**RViz 查看点云**：
+1. 打开 RViz
+2. Add → PointCloud2
+3. Topic 选 `/camera/depth/points`
+4. Fixed Frame 设为 `base_link`
+
+> 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（RViz 在 Jetson 上渲染实时图像会卡）。
+
 ---
 
 ## 六、数据流说明
@@ -395,7 +471,7 @@ xdg-open frames.pdf
 ```
 map ──(amcl/gmapping)──► odom ──(EKF)──► base_link ──┬── laser_link
                                                       ├── imu_link
-                                                      ├── chassis_base_link
+                                                      ├── camera_link ──► d435i_link (RealSense D435i, 可选)
                                                       └── wheels (4个麦轮)
 ```
 

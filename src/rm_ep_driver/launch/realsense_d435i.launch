@@ -1,0 +1,4 @@
+<launch>
+  <!-- RealSense D435i driver -->
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch"/>
+</launch>

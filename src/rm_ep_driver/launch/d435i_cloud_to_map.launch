@@ -1,0 +1,16 @@
+<launch>
+  <!-- 点云投 map 帧 + 降采样 + 限速，供 WebRop/HL2 显示。
+       订阅 /camera/depth/points（depth_to_pointcloud.py），发布 /d435i/cloud_map (map 帧)。
+       依赖：d435i_depth_to_pointcloud.launch 要先起（出 /camera/depth/points）。 -->
+  <arg name="voxel_size" default="0.10" doc="显示用体素大小(米)，越大点越少越省带宽"/>
+  <arg name="rate_hz" default="2.0" doc="发布频率(Hz)，监控用 2Hz 足够"/>
+  <arg name="accumulate" default="true" doc="H4 累积拼帧：多帧在 map 里拼出整个环境（false=只发当前帧）"/>
+  <arg name="max_points" default="40000" doc="累积上限(点数)，越大环境越大但内存越多；Jetson 40k 点够用"/>
+
+  <node name="cloud_to_map" pkg="rm_ep_driver" type="cloud_to_map.py" output="screen">
+    <param name="voxel_size" value="$(arg voxel_size)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
+    <param name="accumulate" value="$(arg accumulate)"/>
+    <param name="max_points" value="$(arg max_points)"/>
+  </node>
+</launch>

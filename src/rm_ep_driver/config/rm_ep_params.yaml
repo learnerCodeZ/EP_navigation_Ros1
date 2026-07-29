@@ -23,3 +23,4 @@ enable_imu: false
 # HI12 外置 IMU 参数
 hi12_port: "/dev/hi12_imu" # HI12 串口设备
 hi12_baud: 115200          # HI12 波特率
+

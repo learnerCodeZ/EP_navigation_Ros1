@@ -10,7 +10,7 @@
 EP_navigation_Ros1/
 └── src/
     ├── rplidar_ros/              思岚 RPLIDAR A2 激光雷达驱动
-    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动
+    ├── rm_ep_driver/             RoboMaster EP ROS 驱动节点 + HI12 驱动 + D435i 深度相机
     ├── rm_ep_description/        EP 机器人 URDF 模型
     └── rm_ep_navigation/         建图与导航配置包
 ```
@@ -39,8 +39,8 @@ URDF/XACRO 模型，定义 TF 树：
 ```
 map ──(gmapping/amcl)──► odom ──(EKF)──► base_link ──┬── laser_link
                                                       ├── imu_link
-                                                      ├── chassis_base_link
-                                                      │   └── arm → camera
+                                                      ├── camera_link
+                                                      │   └── d435i_link (RealSense D435i, 可选)
                                                       └── wheels (4个麦轮)
 ```
 
@@ -75,6 +75,9 @@ ros-noetic-robot-state-publisher
 ros-noetic-joint-state-publisher-gui
 ros-noetic-robot-localization
 ros-noetic-teb-local-planner
+# D435i 深度相机（可选；不用 D435i 可不装）
+ros-noetic-realsense2-camera
+ros-noetic-depthimage-to-laserscan
 ```
 
 ### Python 依赖
@@ -96,7 +99,9 @@ sudo apt install -y \
   ros-noetic-robot-state-publisher \
   ros-noetic-joint-state-publisher-gui \
   ros-noetic-robot-localization \
-  ros-noetic-teb-local-planner
+  ros-noetic-teb-local-planner \
+  ros-noetic-realsense2-camera \
+  ros-noetic-depthimage-to-laserscan
 ```
 
 ### 2. 安装 Python SDK
@@ -165,6 +170,112 @@ roslaunch rm_ep_driver rm_ep_chassis_bringup.launch ep_conn_type:=sta
 roslaunch rm_ep_navigation mapping.launch use_hi12:=false enable_imu:=true
 ```
 
+### D435i 深度相机（可选）
+
+RealSense D435i（RGB + 深度 + IMU）作为可选感知扩展。默认 `use_d435i:=false`，不启用时与建图/导航完全无关。
+
+**硬件接线（关键）**：
+- D435i **必须直连上位机的 USB 口**，不能插 EP 底盘的 Type-C 口（那个口连底盘主控板，数据到不了上位机；底盘是封闭固件，无法转发 USB 设备）
+- 必须接 **USB 3.0 口**（蓝色）；USB 2.0 下 RGB 不可用、设备反复掉线
+
+**验证 USB 3.0**（接好后）：
+```bash
+lsusb -t | grep -A1 5000M     # D435i 应在 5000M 链路（USB 2.0 是 480M）
+lsusb | grep 8086             # 应为 8086:0b3a（USB 3.0 模式 PID；USB 2.0 是 0ad6）
+```
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `use_d435i` | `false` | 建图/导航 launch 内嵌启动 D435i |
+
+```bash
+# 建图/导航附带 D435i
+roslaunch rm_ep_navigation mapping.launch use_d435i:=true
+roslaunch rm_ep_navigation navigation.launch use_d435i:=true map_file:=...
+
+# 独立调试 D435i（自动起 URDF + 驱动 + RViz，配置好看 scan）
+roslaunch rm_ep_driver d435i_bringup.launch
+```
+
+D435i 的深度可转 LaserScan（`/d435i/scan`），作为前方约 86° 的补充感知。
+
+**3D 点云**（已集成）：`d435i_bringup.launch` 自动启动 `depth_to_pointcloud.py`，从深度图生成 PointCloud2（`/camera/depth/points`），带体素降采样（5cm）和跳帧优化。RViz 中可直接查看 3D 点云。
+
+```bash
+# 独立启动 D435i（含 2D scan + 3D 点云 + RViz）
+roslaunch rm_ep_driver d435i_bringup.launch
+
+# 调整降采样参数
+roslaunch rm_ep_driver d435i_bringup.launch voxel_size:=0.1  # 10cm 体素
+roslaunch rm_ep_driver d435i_bringup.launch skip_frames:=3   # 每 3 帧发布
+```
+
+> 📷 看 RGB 画面建议用 `rqt_image_view /camera/color/image_raw`（轻量）；RViz 主要看 `/d435i/scan` 和 `/camera/depth/points`（Jetson 上 RViz 渲染实时图像会卡）。
+
+更详细的故障排查见 [docs/details.md](docs/details.md)。
+
+#### 3D 彩色点云 + Octomap 建图
+
+D435i 支持生成**累积彩色点云**和 **Octomap 3D 八叉树地图**，可直接在 WebRop 浏览器或 HoloLens2 上查看（不需要 SSH 跑 RViz）。
+
+**3D 彩色点云**（`/d435i/cloud_map`，map 帧，10cm 体素，2Hz）：
+- `depth_to_pointcloud.py`：深度图 → xyzrgb 彩色点云（TF 投影取色，无彩色时退化 xyz）。
+- `cloud_to_map.py`：点云投到 map 帧（tf2 坐标变换）、体素降采样、**累积拼帧**（多帧拼出完整环境）、**颜色平均**（多次观测取均值，更准更稳定）。
+- `d435i_bringup.launch` 自动带起上述两个节点（`use_d435i:=true` 时）。
+
+**Octomap 3D 建图**（`octomap_server`，八叉树 3D 地图）：
+- 独立启动：`roslaunch rm_ep_driver d435i_octomap.launch`（自动弹出预配置 RViz）
+- 依赖（一次性安装）：`sudo apt install ros-noetic-octomap-server ros-noetic-octomap-rviz-plugins`
+
+**完整测试流程**（4 个终端依次启动）：
+
+```bash
+# === 终端1：导航（提供 map 坐标系 + 底盘 + 激光雷达）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_navigation navigation.launch map_name:=教室 rviz:=false
+
+# === 终端2：D435i 深度相机（等终端1 稳定后再开）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_driver d435i_bringup.launch use_description:=false rviz:=false
+
+# === 终端3：Octomap 3D 建图（自动弹 RViz）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_driver d435i_octomap.launch
+# 不弹 RViz：roslaunch rm_ep_driver d435i_octomap.launch rviz:=false
+
+# === 终端4：键盘控制（推动小车建图）===
+source ~/EP_navigation_Ros1/devel/setup.bash
+roslaunch rm_ep_driver teleop_keyboard.launch
+```
+
+用 WASD 推小车走一圈，终端3 的 RViz 里八叉树会逐渐成型。
+
+**保存 3D 地图**（建图完成后，另开终端，必须带 `.bt` 后缀）：
+
+```bash
+rosrun octomap_server octomap_saver -f ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室.bt
+```
+
+**加载已有 3D 地图**（只可视化，不需要小车）：
+
+```bash
+roslaunch rm_ep_driver d435i_octomap.launch load_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/教室.bt
+```
+
+**RViz 配置说明**：`octomap_debug.rviz` 预设了 Grid + Map + PointCloud2 + OctoMap 3D + TF 五个显示。加载模式下如果 OctoMap 未自动显示，手动添加：**Add → By Topic → /octomap_full → Map**，然后 **File → Save Config** 保存。
+
+**关键话题**：
+
+| 话题 | 帧 | 说明 |
+|---|---|---|
+| `/d435i/cloud_map` | map | 累积彩色点云（10cm，2Hz，WebRop/HL2 消费） |
+| `/camera/depth/points` | camera_depth_optical_frame | 深度点云（xyzrgb，5cm，原帧率，RViz 调试用） |
+| `/octomap_binary` / `/octomap_full` | map | 八叉树 3D 地图 |
+| `/d435i/scan` | d435i_link | 深度转 LaserScan（进 local_costmap 避障） |
+| `/camera/color/image_raw/compressed` | — | D435i RGB 画面（WebRop 深度相机面板消费） |
+
+---
+
 ### EP 连接模式
 
 | 模式 | 参数 | 说明 |
@@ -208,6 +319,31 @@ rosrun rm_ep_navigation save_map.sh 教室
 rosrun rm_ep_navigation save_map.sh
 ```
 
+地图目录结构：
+
+```
+rm_ep_navigation/maps/
+├── 2d/                    ← 2D 占用栅格地图（gmapping 建图，AMCL 导航用）
+│   ├── 教室/
+│   │   ├── 教室.yaml
+│   │   └── 教室.pgm
+│   └── 20260621_153045/
+│       ├── 20260621_153045.yaml
+│       └── 20260621_153045.pgm
+└── 3d/                    ← 3D 八叉树地图（Octomap 建图，未来 3D 导航用）
+    └── 教室.bt
+```
+
+查看已有地图：
+
+```bash
+# 2D 地图
+ls ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/2d/
+
+# 3D 地图
+ls ~/EP_navigation_Ros1/src/rm_ep_navigation/maps/3d/
+```
+
 建图 launch 参数：
 
 | 参数 | 默认值 | 说明 |
@@ -225,8 +361,11 @@ rosrun rm_ep_navigation save_map.sh
 source ~/EP_navigation_Ros1/devel/setup.bash
 
 # 加载地图并启动导航
+roslaunch rm_ep_navigation navigation.launch map_name:=教室 rviz:=false
+
+# 指定绝对路径（优先级高于 map_name）
 roslaunch rm_ep_navigation navigation.launch \
-  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/教室/教室.yaml
+  map_file:=~/EP_navigation_Ros1/src/rm_ep_navigation/maps/2d/教室/教室.yaml
 
 # 在 RVIZ 中使用 "2D Nav Goal" 工具点击目标点即可
 ```

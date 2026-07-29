@@ -68,8 +68,8 @@ move_base / teleop → /cmd_vel → 驱动节点 → SDK drive_speed
 ```
 map ──(gmapping/amcl)──► odom ──(EKF)──► base_link ──(URDF)──► laser_link
                                                                   ├── imu_link
-                                                                  ├── chassis_base_link
-                                                                  │   └── arm → camera
+                                                                  ├── camera_link
+                                                                  │   └── d435i_link (D435i, 可选)
                                                                   └── wheels (4个麦轮)
 ```
 
@@ -85,6 +85,7 @@ base_link 原点在底盘几何中心，前方 +X，左方 +Y，上方 +Z。
 |------|--------------------------|-----------|
 | RPLIDAR A2 | 最前方，宽度居中，底盘顶部，线缆朝前 | x=0.11, y=0, z=0.15 |
 | HI12 IMU | 长度中间，右侧偏 6cm，底盘顶部 | x=0, y=-0.06, z=0.10 |
+| D435i (可选) | 底盘顶部前方，激光雷达后方，镜头朝前 | x=0.05, y=0, z=0.12 |
 
 ```
              EP 顶部俯视图
@@ -314,6 +315,35 @@ rosrun tf view_frames
 # 查看具体两个帧之间的变换
 rosrun tf tf_echo odom base_link
 ```
+
+### D435i 深度相机问题
+
+**D435i 不被识别 / `No RealSense devices found`**：
+- 确认 D435i 插在**上位机的 USB 口**，不是 EP 底盘的 Type-C 口（底盘口连底盘主控板，上位机看不到；底盘是封闭固件，也无法转发 USB 设备）
+- 确认是 **USB 3.0 数据线**（USB-A 头蓝色 + 9 触点；很多 USB-C 线其实是 USB 2.0 充电线，只有 4 触点，换口也没用）
+
+**识别了但 RGB 不可用 / `Color sensor isn't supported` / 设备反复掉线**（典型 USB 2.0 症状）：
+```bash
+lsusb -t                        # D435i 若在 480M（不是 5000M）= USB 2.0
+lsusb | grep 8086               # PID 0ad6 = USB 2.0 模式（正常 USB 3.0 是 0b3a）
+```
+解决：换 USB 3.0 口 + USB 3.0 线，直到 `lsusb -t` 里 D435i 是 5000M。
+
+**验证 D435i 正常工作**：
+```bash
+roslaunch rm_ep_driver d435i_bringup.launch
+# 日志应: Device Name "Intel RealSense D435I"（不是 "USB2"）+ RGB camera was found + 不掉线
+rostopic hz /camera/color/image_raw    # ~30Hz
+rostopic hz /d435i/scan                 # ~30Hz
+```
+
+**RViz 里 RGB 黑 / No image**：Jetson 上 RViz 渲染实时图像易卡/黑，建议用 `rqt_image_view /camera/color/image_raw` 看画面，RViz 只看 `/d435i/scan` 和 `/camera/depth/points`。
+
+**3D 点云**：`d435i_bringup.launch` 自动启动 `depth_to_pointcloud.py`，从深度图生成 PointCloud2。脚本带体素降采样（默认 5cm）、跳帧（默认每 2 帧）、距离过滤（0.1-5m）。参数可通过 launch 文件调整。
+
+**realsense2_camera 2.3.2 的 `enable_pointcloud` 参数不生效**（rosparam 和 dynamic_reconfigure 都试过），所以用自写的 `depth_to_pointcloud.py` 节点替代。
+
+**voxel_grid nodelet 降采样**：pcl_ros 的 voxel_grid nodelet 有 remap 问题（只订阅 bond，不订阅 pointcloud topic），暂跳过，用脚本内置的 numpy 体素降采样。
 
 ## 待优化项
 

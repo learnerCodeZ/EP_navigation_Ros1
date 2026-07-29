@@ -1,0 +1,19 @@
+<launch>
+  <!-- D435i pointcloud downsampling using pcl_ros voxel_grid nodelet -->
+  <arg name="input_topic" default="/camera/depth/points" doc="input pointcloud topic"/>
+  <arg name="output_topic" default="/d435i/cloud_downsampled" doc="output downsampled topic"/>
+  <arg name="voxel_size" default="0.05" doc="voxel grid filter size in meters (5cm default)"/>
+
+  <!-- Nodelet manager -->
+  <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen"/>
+
+  <!-- VoxelGrid filter nodelet (remap without ~ prefix for nodelets) -->
+  <node pkg="nodelet" type="nodelet" name="d435i_voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="input" to="$(arg input_topic)"/>
+    <remap from="output" to="$(arg output_topic)"/>
+    <param name="leaf_size" value="$(arg voxel_size)"/>
+    <param name="filter_field_name" value="z"/>
+    <param name="filter_limit_min" value="0.1"/>
+    <param name="filter_limit_max" value="10.0"/>
+  </node>
+</launch>

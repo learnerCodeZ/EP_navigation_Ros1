@@ -9,7 +9,7 @@
   <arg name="ep_ip" default="" doc="EP IP 地址"/>
   <arg name="lidar_frame" default="laser_link" doc="激光雷达 TF 帧名"/>
   <arg name="serial_port" default="/dev/rplidar" doc="激光雷达串口号（udev 固定别名）"/>
-  <arg name="map_name" default="" doc="地图名称 (maps/ 下的文件夹名，如 20260704_223537 或 家里)"/>
+  <arg name="map_name" default="" doc="2D 地图名称 (maps/2d/ 下的文件夹名，如 20260704_223537)"/>
   <arg name="map_file" default="" doc="地图 yaml 绝对路径 (优先级高于 map_name)"/>
   <arg name="rviz" default="true" doc="是否启动 RVIZ"/>
   <arg name="use_hi12" default="true" doc="是否使用 HI12 外置 IMU"/>
@@ -17,6 +17,7 @@
   <arg name="hi12_baud" default="115200" doc="HI12 波特率"/>
   <arg name="imu_frame" default="imu_link" doc="IMU TF 帧名"/>
   <arg name="cmd_vel_topic" default="cmd_vel" doc="move_base 速度输出话题；经 twist_mux 时传 cmd_vel_raw（默认 cmd_vel 向后兼容，单独跑 navigation.launch 不受影响）"/>
+  <arg name="use_d435i" default="false" doc="是否启动 RealSense D435i 深度相机"/>
 
   <!-- ========== 1. 机器人模型 (URDF + TF) ========== -->
   <include file="$(find rm_ep_description)/launch/description.launch"/>
@@ -53,12 +54,12 @@
   </node>
 
   <!-- ========== 6. map_server 加载地图 ========== -->
-  <!-- 用法: map_name:=20260704_223537  (maps/ 下的文件夹名)
+  <!-- 用法: map_name:=20260704_223537  (maps/2d/ 下的文件夹名)
          或 map_file:=/abs/path/map.yaml (绝对路径，优先级高) -->
   <node if="$(eval arg('map_file') != '')" name="map_server" pkg="map_server" type="map_server"
         args="$(arg map_file)"/>
   <node unless="$(eval arg('map_file') != '')" name="map_server" pkg="map_server" type="map_server"
-        args="$(find rm_ep_navigation)/maps/$(arg map_name)/$(arg map_name).yaml"/>
+        args="$(find rm_ep_navigation)/maps/2d/$(arg map_name)/$(arg map_name).yaml"/>
 
   <!-- ========== 7. AMCL 定位 ========== -->
   <node name="amcl" pkg="amcl" type="amcl" output="screen">
@@ -77,6 +78,9 @@
     <remap from="scan" to="/scan"/>
     <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
   </node>
+
+  <!-- ========== D435i 深度相机（可选） ========== -->
+  <include if="$(arg use_d435i)" file="$(find rm_ep_driver)/launch/d435i_bringup.launch"/>
 
   <!-- ========== 9. RVIZ 可视化 ========== -->
   <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"

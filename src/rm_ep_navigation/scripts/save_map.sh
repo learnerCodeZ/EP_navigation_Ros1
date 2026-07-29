@@ -1,12 +1,12 @@
 #!/bin/bash
-# 保存 SLAM 构建的地图
+# 保存 SLAM 构建的 2D 地图
 # 用法:
 #   rosrun rm_ep_navigation save_map.sh [地图名称]
-# 地图保存到 maps/<地图名称>/ 下，每次建图独立一个文件夹
+# 地图保存到 maps/2d/<地图名称>/ 下，每次建图独立一个文件夹
 
 MAP_NAME=${1:-$(date +%Y%m%d_%H%M%S)}
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-MAP_DIR="$(cd "$SCRIPT_DIR/../maps" 2>/dev/null && pwd || echo "$SCRIPT_DIR/../maps")"
+MAP_DIR="$(cd "$SCRIPT_DIR/../maps/2d" 2>/dev/null && pwd || echo "$SCRIPT_DIR/../maps/2d")"
 
 SAVE_DIR="${MAP_DIR}/${MAP_NAME}"
 
